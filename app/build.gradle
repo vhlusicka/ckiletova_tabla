@@ -1,0 +1,36 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.debelatabla.fifaleague'
+    compileSdk 35
+    buildFeatures { buildConfig true }
+
+    defaultConfig {
+        applicationId 'com.debelatabla.fifaleague'
+        minSdk 23
+        targetSdk 35
+        versionCode 4
+        versionName '1.0.0'
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('../release-key.jks')
+            storePassword 'FifaFriends2026!'
+            keyAlias 'fifa-league'
+            keyPassword 'FifaFriends2026!'
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    applicationVariants.configureEach { variant ->
+        variant.outputs.configureEach {
+            outputFileName = "Ckiletova-tabla-${variant.versionName}.apk"
+        }
+    }
+}
