@@ -11,60 +11,546 @@ import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.view.*;
 import android.widget.*;
-import org.json.*;
 import java.util.*;
+import org.json.*;
 
 public class MainActivity extends Activity {
-    static final int BG=Color.rgb(8,27,22), CARD=Color.rgb(19,50,41), GREEN=Color.rgb(38,208,124), MUTED=Color.rgb(168,194,183);
-    final ArrayList<String> players=new ArrayList<>(); final ArrayList<String> teams=new ArrayList<>(); final ArrayList<Game> games=new ArrayList<>(); final ArrayList<String> queue=new ArrayList<>();
-    LinearLayout root, namesBox; android.content.SharedPreferences prefs;
-    static class Game { int a,b,ga,gb; Game(int a,int b,int ga,int gb){this.a=a;this.b=b;this.ga=ga;this.gb=gb;} }
+  static final int BG = Color.rgb(8, 27, 22),
+      CARD = Color.rgb(19, 50, 41),
+      GREEN = Color.rgb(38, 208, 124),
+      MUTED = Color.rgb(168, 194, 183);
+  final ArrayList<String> players = new ArrayList<>();
+  final ArrayList<String> teams = new ArrayList<>();
+  final ArrayList<Game> games = new ArrayList<>();
+  final ArrayList<String> queue = new ArrayList<>();
+  LinearLayout root, namesBox;
+  android.content.SharedPreferences prefs;
 
-    @Override public void onCreate(Bundle b){super.onCreate(b); prefs=getSharedPreferences("league",MODE_PRIVATE); load(); if(players.size()<2) setupScreen(); else tableScreen();}
-    TextView text(String s,int size,int color){TextView v=new TextView(this);v.setText(s);v.setTextSize(size);v.setTextColor(color);v.setPadding(dp(12),dp(10),dp(12),dp(10));return v;}
-    Button button(String s){Button b=new Button(this);b.setText(s);b.setTextColor(BG);b.setTextSize(15);b.setTypeface(null,Typeface.BOLD);b.setBackgroundColor(GREEN);b.setAllCaps(false);b.setPadding(dp(14),dp(10),dp(14),dp(10));return b;}
-    LinearLayout base(String title,String sub){
-        ScrollView sv=new ScrollView(this);sv.setFillViewport(true);sv.setBackgroundColor(BG);root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setPadding(dp(18),dp(18),dp(18),dp(28));sv.addView(root,new ScrollView.LayoutParams(-1,-2));
-        TextView h=text(title,28,Color.WHITE);h.setTypeface(null,Typeface.BOLD);root.addView(h); if(sub!=null){TextView x=text(sub,14,MUTED);root.addView(x);} setContentView(sv);return root;
+  static class Game {
+    int a, b, ga, gb;
+
+    Game(int a, int b, int ga, int gb) {
+      this.a = a;
+      this.b = b;
+      this.ga = ga;
+      this.gb = gb;
     }
-    void setupScreen(){
-        base("Čkiletova tabla","Create a tournament. Add 2–8 contestants to begin.");Button info=button("ⓘ  Info");info.setOnClickListener(v->new AlertDialog.Builder(this).setTitle("Čkiletova tabla").setMessage("Author: Vilim Hlusicka (vilim.hlusicka@gmail.com)\n\nVersion: "+BuildConfig.VERSION_NAME).setPositiveButton("OK",null).show());LinearLayout.LayoutParams infoParams=new LinearLayout.LayoutParams(-2,-2);infoParams.gravity=Gravity.END;infoParams.setMargins(0,dp(4),0,dp(4));root.addView(info,infoParams);namesBox=new LinearLayout(this);namesBox.setOrientation(LinearLayout.VERTICAL);root.addView(namesBox);
-        addNameField("");addNameField(""); Button plus=button("＋  Add contestant");plus.setOnClickListener(v->{if(namesBox.getChildCount()<8)addNameField("");else toast("Maximum 8 contestants");});root.addView(plus,margin(0,12));
-        Button confirm=button("CONFIRM CONTESTANTS");confirm.setOnClickListener(v->confirmPlayers());root.addView(confirm,margin(0,24));
+  }
+
+  @Override
+  public void onCreate(Bundle b) {
+    super.onCreate(b);
+    prefs = getSharedPreferences("league", MODE_PRIVATE);
+    load();
+    if (players.size() < 2) setupScreen();
+    else tableScreen();
+  }
+
+  TextView text(String s, int size, int color) {
+    TextView v = new TextView(this);
+    v.setText(s);
+    v.setTextSize(size);
+    v.setTextColor(color);
+    v.setPadding(dp(12), dp(10), dp(12), dp(10));
+    return v;
+  }
+
+  Button button(String s) {
+    Button b = new Button(this);
+    b.setText(s);
+    b.setTextColor(BG);
+    b.setTextSize(15);
+    b.setTypeface(null, Typeface.BOLD);
+    b.setBackgroundColor(GREEN);
+    b.setAllCaps(false);
+    b.setPadding(dp(14), dp(10), dp(14), dp(10));
+    return b;
+  }
+
+  LinearLayout base(String title, String sub) {
+    ScrollView sv = new ScrollView(this);
+    sv.setFillViewport(true);
+    sv.setBackgroundColor(BG);
+    root = new LinearLayout(this);
+    root.setOrientation(LinearLayout.VERTICAL);
+    root.setPadding(dp(18), dp(18), dp(18), dp(28));
+    sv.addView(root, new ScrollView.LayoutParams(-1, -2));
+    TextView h = text(title, 28, Color.WHITE);
+    h.setTypeface(null, Typeface.BOLD);
+    root.addView(h);
+    if (sub != null) {
+      TextView x = text(sub, 14, MUTED);
+      root.addView(x);
     }
-    void addNameField(String name){LinearLayout line=new LinearLayout(this);line.setOrientation(LinearLayout.VERTICAL);line.setPadding(0,dp(4),0,dp(4));EditText e=new EditText(this);e.setHint("Contestant "+(namesBox.getChildCount()+1));e.setText(name);e.setTextColor(Color.WHITE);e.setHintTextColor(MUTED);e.setSingleLine();e.setBackgroundTintList(android.content.res.ColorStateList.valueOf(GREEN));e.setPadding(dp(12),dp(12),dp(12),dp(12));line.addView(e,new LinearLayout.LayoutParams(-1,-2));Button assign=button("Assign team  (optional)");assign.setTextSize(12);assign.setTag("");assign.setOnClickListener(v->assignTeam(assign));LinearLayout.LayoutParams assignParams=new LinearLayout.LayoutParams(-2,-2);assignParams.gravity=Gravity.END;assignParams.setMargins(0,dp(2),0,dp(2));line.addView(assign,assignParams);namesBox.addView(line,margin(0,4));}
-    void assignTeam(Button assign){EditText input=new EditText(this);input.setHint("Football team name");input.setSingleLine();input.setText(String.valueOf(assign.getTag()));input.setSelectAllOnFocus(false);int pad=dp(20);FrameLayout box=new FrameLayout(this);box.setPadding(pad,0,pad,0);box.addView(input,new FrameLayout.LayoutParams(-1,-2));new AlertDialog.Builder(this).setTitle("Assign football team").setView(box).setNegativeButton("Cancel",null).setNeutralButton("Clear",(d,w)->{assign.setTag("");assign.setText("Assign team  (optional)");}).setPositiveButton("Save",(d,w)->{String team=input.getText().toString().trim();assign.setTag(team);assign.setText(team.isEmpty()?"Assign team  (optional)":"Team: "+team);}).show();}
-    void confirmPlayers(){ArrayList<String> n=new ArrayList<>(),t=new ArrayList<>();for(int i=0;i<namesBox.getChildCount();i++){LinearLayout line=(LinearLayout)namesBox.getChildAt(i);String s=((EditText)line.getChildAt(0)).getText().toString().trim();if(!s.isEmpty()){n.add(s);t.add(String.valueOf(line.getChildAt(1).getTag()).trim());}}if(n.size()<2){toast("Enter at least 2 contestants");return;}HashSet<String> uniq=new HashSet<>();for(String s:n)if(!uniq.add(s.toLowerCase(Locale.ROOT))){toast("Contestant names must be unique");return;}players.clear();players.addAll(n);teams.clear();teams.addAll(t);queue.clear();games.clear();refillQueue();save();tableScreen();}
-    void tableScreen(){
-        base("League table",games.size()+" games played  •  3 points for a win");Button next=button("PLAY GAME "+(games.size()+1)+"  ›");next.setOnClickListener(v->matchScreen(false));root.addView(next,margin(0,8));
-        Button all=button("All matches");all.setOnClickListener(v->gamesScreen(-1));root.addView(all,margin(0,4));
-        LinearLayout table=new LinearLayout(this);table.setOrientation(LinearLayout.VERTICAL);table.setBackgroundColor(CARD);table.addView(row(new String[]{"#  PLAYER","PT","P","W","D","L","GD"},true,null));
-        ArrayList<Integer> order=new ArrayList<>();for(int i=0;i<players.size();i++)order.add(i);order.sort((x,y)->{int[] X=stats(x),Y=stats(y);int c=Integer.compare(Y[0],X[0]);if(c==0)c=Integer.compare(Y[4],X[4]);if(c==0)c=Integer.compare(Y[5],X[5]);return c;});
-        for(int p=0;p<order.size();p++){int id=order.get(p),rank=p+1;int[] s=stats(id);String gd=(s[4]>0?"+":"")+s[4],team=id<teams.size()?teams.get(id):"";String label=rank+"  "+players.get(id)+(team.isEmpty()?"":"\n     "+team);table.addView(row(new String[]{label,""+s[0],""+(s[1]+s[2]+s[3]),""+s[1],""+s[2],""+s[3],gd},false,v->gamesScreen(id)));}root.addView(table,margin(0,18));
-        Button reset=button("Reset tournament");reset.setBackgroundColor(Color.rgb(224,92,92));reset.setOnClickListener(v->resetDialog());root.addView(reset,margin(0,18));
+    setContentView(sv);
+    return root;
+  }
+
+  void setupScreen() {
+    base("Čkiletova tabla", "Create a tournament. Add 2–8 contestants to begin.");
+    Button info = button("ⓘ  Info");
+    info.setOnClickListener(
+        v ->
+            new AlertDialog.Builder(this)
+                .setTitle("Čkiletova tabla")
+                .setMessage(
+                    "Author: Vilim Hlusicka (vilim.hlusicka@gmail.com)\n\nVersion: "
+                        + BuildConfig.VERSION_NAME)
+                .setPositiveButton("OK", null)
+                .show());
+    LinearLayout.LayoutParams infoParams = new LinearLayout.LayoutParams(-2, -2);
+    infoParams.gravity = Gravity.END;
+    infoParams.setMargins(0, dp(4), 0, dp(4));
+    root.addView(info, infoParams);
+    namesBox = new LinearLayout(this);
+    namesBox.setOrientation(LinearLayout.VERTICAL);
+    root.addView(namesBox);
+    addNameField("");
+    addNameField("");
+    Button plus = button("＋  Add contestant");
+    plus.setOnClickListener(
+        v -> {
+          if (namesBox.getChildCount() < 8) addNameField("");
+          else toast("Maximum 8 contestants");
+        });
+    root.addView(plus, margin(0, 12));
+    Button confirm = button("CONFIRM CONTESTANTS");
+    confirm.setOnClickListener(v -> confirmPlayers());
+    root.addView(confirm, margin(0, 24));
+  }
+
+  void addNameField(String name) {
+    LinearLayout line = new LinearLayout(this);
+    line.setOrientation(LinearLayout.VERTICAL);
+    line.setPadding(0, dp(4), 0, dp(4));
+    EditText e = new EditText(this);
+    e.setHint("Contestant " + (namesBox.getChildCount() + 1));
+    e.setText(name);
+    e.setTextColor(Color.WHITE);
+    e.setHintTextColor(MUTED);
+    e.setSingleLine();
+    e.setBackgroundTintList(android.content.res.ColorStateList.valueOf(GREEN));
+    e.setPadding(dp(12), dp(12), dp(12), dp(12));
+    line.addView(e, new LinearLayout.LayoutParams(-1, -2));
+    Button assign = button("Assign team  (optional)");
+    assign.setTextSize(12);
+    assign.setTag("");
+    assign.setOnClickListener(v -> assignTeam(assign));
+    LinearLayout.LayoutParams assignParams = new LinearLayout.LayoutParams(-2, -2);
+    assignParams.gravity = Gravity.END;
+    assignParams.setMargins(0, dp(2), 0, dp(2));
+    line.addView(assign, assignParams);
+    namesBox.addView(line, margin(0, 4));
+  }
+
+  void assignTeam(Button assign) {
+    EditText input = new EditText(this);
+    input.setHint("Football team name");
+    input.setSingleLine();
+    input.setText(String.valueOf(assign.getTag()));
+    input.setSelectAllOnFocus(false);
+    int pad = dp(20);
+    FrameLayout box = new FrameLayout(this);
+    box.setPadding(pad, 0, pad, 0);
+    box.addView(input, new FrameLayout.LayoutParams(-1, -2));
+    new AlertDialog.Builder(this)
+        .setTitle("Assign football team")
+        .setView(box)
+        .setNegativeButton("Cancel", null)
+        .setNeutralButton(
+            "Clear",
+            (d, w) -> {
+              assign.setTag("");
+              assign.setText("Assign team  (optional)");
+            })
+        .setPositiveButton(
+            "Save",
+            (d, w) -> {
+              String team = input.getText().toString().trim();
+              assign.setTag(team);
+              assign.setText(team.isEmpty() ? "Assign team  (optional)" : "Team: " + team);
+            })
+        .show();
+  }
+
+  void confirmPlayers() {
+    ArrayList<String> n = new ArrayList<>(), t = new ArrayList<>();
+    for (int i = 0; i < namesBox.getChildCount(); i++) {
+      LinearLayout line = (LinearLayout) namesBox.getChildAt(i);
+      String s = ((EditText) line.getChildAt(0)).getText().toString().trim();
+      if (!s.isEmpty()) {
+        n.add(s);
+        t.add(String.valueOf(line.getChildAt(1).getTag()).trim());
+      }
     }
-    View row(String[] vals,boolean header,View.OnClickListener click){LinearLayout r=new LinearLayout(this);r.setOrientation(LinearLayout.HORIZONTAL);r.setPadding(dp(2),dp(5),dp(2),dp(5));boolean twoLines=!header&&vals[0].contains("\n");for(int i=0;i<vals.length;i++){TextView t=text(vals[i],header?10:13,i==0?Color.WHITE:MUTED);if(twoLines&&i==0){SpannableString styled=new SpannableString(vals[i]);int split=vals[i].indexOf('\n')+1;styled.setSpan(new ForegroundColorSpan(Color.argb(128,255,255,255)),split,styled.length(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);t.setText(styled);}if(header||i==1)t.setTypeface(null,Typeface.BOLD);t.setGravity(i==0?Gravity.CENTER_VERTICAL:Gravity.CENTER);r.addView(t,new LinearLayout.LayoutParams(0,dp(twoLines?64:48),i==0?3.4f:1f));}if(click!=null){r.setClickable(true);r.setOnClickListener(click);}return r;}
-    int[] stats(int p){int pts=0,w=0,d=0,l=0,gd=0,gf=0;for(Game g:games){if(g.a!=p&&g.b!=p)continue;int mine=g.a==p?g.ga:g.gb,other=g.a==p?g.gb:g.ga;gf+=mine;gd+=mine-other;if(mine>other){w++;pts+=3;}else if(mine==other){d++;pts++;}else l++;}return new int[]{pts,w,d,l,gd,gf};}
-    void matchScreen(boolean editing){
-        if(!editing&&queue.isEmpty())refillQueue();int ai,bi;if(editing){Game g=games.get(games.size()-1);ai=g.a;bi=g.b;}else{String[] q=queue.get(0).split(":");ai=Integer.parseInt(q[0]);bi=Integer.parseInt(q[1]);}
-        base(editing?"Correct latest result":"Game "+(games.size()+1),editing?"Only the latest match can be edited.":"Next home-and-away league fixture");TextView versus=text("HOME\n"+players.get(ai)+"\n\nVS\n\n"+players.get(bi)+"\nAWAY",25,Color.WHITE);versus.setGravity(Gravity.CENTER);versus.setTypeface(null,Typeface.BOLD);root.addView(versus,margin(0,20));
-        LinearLayout scores=new LinearLayout(this);scores.setGravity(Gravity.CENTER);EditText a=score();EditText b=score();scores.addView(a,new LinearLayout.LayoutParams(dp(92),dp(72)));scores.addView(text("  —  ",28,MUTED));scores.addView(b,new LinearLayout.LayoutParams(dp(92),dp(72)));root.addView(scores);if(editing){Game g=games.get(games.size()-1);a.setText(""+g.ga);b.setText(""+g.gb);}
-        Button finish=button(editing?"SAVE CORRECTION":"FINISH MATCH");int fa=ai,fb=bi;finish.setOnClickListener(v->{if(a.getText().length()==0||b.getText().length()==0){toast("Enter both scores");return;}int ga=Integer.parseInt(a.getText().toString()),gb=Integer.parseInt(b.getText().toString());new AlertDialog.Builder(this).setTitle(editing?"Save corrected result?":"Finish this match?").setMessage(players.get(fa)+"  "+ga+" – "+gb+"  "+players.get(fb)).setNegativeButton("Cancel",null).setPositiveButton("Confirm",(d,x)->{if(editing){Game g=games.get(games.size()-1);g.ga=ga;g.gb=gb;}else{games.add(new Game(fa,fb,ga,gb));queue.remove(0);}save();tableScreen();}).show();});root.addView(finish,margin(0,24));Button back=button("Cancel");back.setOnClickListener(v->tableScreen());root.addView(back,margin(0,8));
+    if (n.size() < 2) {
+      toast("Enter at least 2 contestants");
+      return;
     }
-    EditText score(){EditText e=new EditText(this);e.setTextColor(Color.WHITE);e.setTextSize(28);e.setGravity(Gravity.CENTER);e.setHint("0");e.setHintTextColor(MUTED);e.setInputType(InputType.TYPE_CLASS_NUMBER);e.setBackgroundTintList(android.content.res.ColorStateList.valueOf(GREEN));return e;}
-    void gamesScreen(int player){String title=player<0?"All matches":players.get(player);base(title,player<0?"Complete tournament history • home team is shown first":"Previously played matches • home team is shown first");if(games.isEmpty())root.addView(text("No matches played yet.",16,MUTED));for(int i=games.size()-1;i>=0;i--){Game g=games.get(i);if(player>=0&&g.a!=player&&g.b!=player)continue;LinearLayout card=new LinearLayout(this);card.setOrientation(LinearLayout.VERTICAL);card.setBackgroundColor(CARD);TextView n=text("GAME "+(i+1)+"  •  HOME / AWAY",11,GREEN);n.setTypeface(null,Typeface.BOLD);card.addView(n);TextView result=text("HOME  "+players.get(g.a)+"   "+g.ga+" – "+g.gb+"   "+players.get(g.b)+"  AWAY",17,Color.WHITE);result.setTypeface(null,Typeface.BOLD);card.addView(result);if(i==games.size()-1){Button edit=button("Edit latest result");edit.setOnClickListener(v->matchScreen(true));card.addView(edit,margin(8,5));}root.addView(card,margin(0,6));}Button back=button("‹  Back to table");back.setOnClickListener(v->tableScreen());root.addView(back,margin(0,20));}
-    void resetDialog(){AlertDialog d=new AlertDialog.Builder(this).setTitle("Reset the whole tournament?").setMessage("All contestants and match results will be erased.\n\nPlease wait 10 seconds.").setNegativeButton("Cancel",null).setPositiveButton("YES (10)",null).create();d.setOnShowListener(x->{Button yes=d.getButton(-1);yes.setEnabled(false);new CountDownTimer(10000,1000){public void onTick(long m){yes.setText("YES ("+(m/1000+1)+")");}public void onFinish(){yes.setText("YES, RESET");yes.setEnabled(true);yes.setOnClickListener(v->{players.clear();teams.clear();games.clear();queue.clear();prefs.edit().clear().apply();d.dismiss();setupScreen();});}}.start();});d.show();}
-    void refillQueue(){
-        ArrayList<Integer> rotation=new ArrayList<>();for(int i=0;i<players.size();i++)rotation.add(i);Collections.shuffle(rotation);if(rotation.size()%2==1)rotation.add(-1);
-        int count=rotation.size(),rounds=count-1;ArrayList<String> firstLeg=new ArrayList<>();
-        for(int round=0;round<rounds;round++){
-            for(int i=0;i<count/2;i++){int left=rotation.get(i),right=rotation.get(count-1-i);if(left<0||right<0)continue;boolean swap=(round+i)%2==1;int home=swap?right:left,away=swap?left:right;firstLeg.add(home+":"+away);}
-            int last=rotation.remove(count-1);rotation.add(1,last);
-        }
-        queue.addAll(firstLeg);for(String fixture:firstLeg){String[] pair=fixture.split(":");queue.add(pair[1]+":"+pair[0]);}
+    HashSet<String> uniq = new HashSet<>();
+    for (String s : n)
+      if (!uniq.add(s.toLowerCase(Locale.ROOT))) {
+        toast("Contestant names must be unique");
+        return;
+      }
+    players.clear();
+    players.addAll(n);
+    teams.clear();
+    teams.addAll(t);
+    queue.clear();
+    games.clear();
+    refillQueue();
+    save();
+    tableScreen();
+  }
+
+  void tableScreen() {
+    base("League table", games.size() + " games played  •  3 points for a win");
+    Button next = button("PLAY GAME " + (games.size() + 1) + "  ›");
+    next.setOnClickListener(v -> matchScreen(false));
+    root.addView(next, margin(0, 8));
+    Button all = button("All matches");
+    all.setOnClickListener(v -> gamesScreen(-1));
+    root.addView(all, margin(0, 4));
+    LinearLayout table = new LinearLayout(this);
+    table.setOrientation(LinearLayout.VERTICAL);
+    table.setBackgroundColor(CARD);
+    table.addView(row(new String[] {"#  PLAYER", "PT", "P", "W", "D", "L", "GD"}, true, null));
+    ArrayList<Integer> order = new ArrayList<>();
+    for (int i = 0; i < players.size(); i++) order.add(i);
+    order.sort(
+        (x, y) -> {
+          int[] X = stats(x), Y = stats(y);
+          int c = Integer.compare(Y[0], X[0]);
+          if (c == 0) c = Integer.compare(Y[4], X[4]);
+          if (c == 0) c = Integer.compare(Y[5], X[5]);
+          return c;
+        });
+    for (int p = 0; p < order.size(); p++) {
+      int id = order.get(p), rank = p + 1;
+      int[] s = stats(id);
+      String gd = (s[4] > 0 ? "+" : "") + s[4], team = id < teams.size() ? teams.get(id) : "";
+      String label = rank + "  " + players.get(id) + (team.isEmpty() ? "" : "\n     " + team);
+      table.addView(
+          row(
+              new String[] {
+                label, "" + s[0], "" + (s[1] + s[2] + s[3]), "" + s[1], "" + s[2], "" + s[3], gd
+              },
+              false,
+              v -> gamesScreen(id)));
     }
-    void save(){try{JSONObject o=new JSONObject();o.put("schedulerVersion",2);JSONArray p=new JSONArray();for(String s:players)p.put(s);o.put("players",p);JSONArray ts=new JSONArray();for(String s:teams)ts.put(s);o.put("teams",ts);JSONArray gs=new JSONArray();for(Game g:games)gs.put(new JSONArray().put(g.a).put(g.b).put(g.ga).put(g.gb));o.put("games",gs);JSONArray q=new JSONArray();for(String s:queue)q.put(s);o.put("queue",q);prefs.edit().putString("data",o.toString()).apply();}catch(Exception ignored){}}
-    void load(){try{String raw=prefs.getString("data",null);if(raw==null)return;JSONObject o=new JSONObject(raw);JSONArray p=o.getJSONArray("players");for(int i=0;i<p.length();i++)players.add(p.getString(i));JSONArray ts=o.optJSONArray("teams");for(int i=0;i<players.size();i++)teams.add(ts!=null&&i<ts.length()?ts.optString(i,""):"");JSONArray gs=o.getJSONArray("games");for(int i=0;i<gs.length();i++){JSONArray g=gs.getJSONArray(i);games.add(new Game(g.getInt(0),g.getInt(1),g.getInt(2),g.getInt(3)));}if(o.optInt("schedulerVersion",1)>=2){JSONArray q=o.optJSONArray("queue");if(q!=null)for(int i=0;i<q.length();i++)queue.add(q.getString(i));}else if(players.size()>=2){queue.clear();refillQueue();save();}}catch(Exception e){players.clear();teams.clear();games.clear();queue.clear();}}
-    LinearLayout.LayoutParams margin(int h,int v){LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.setMargins(dp(h),dp(v),dp(h),dp(v));return p;}int dp(int n){return (int)(n*getResources().getDisplayMetrics().density+.5f);}void toast(String s){Toast.makeText(this,s,Toast.LENGTH_SHORT).show();}
-    @Override public void onBackPressed(){if(players.size()>=2)tableScreen();else super.onBackPressed();}
+    root.addView(table, margin(0, 18));
+    Button reset = button("Reset tournament");
+    reset.setBackgroundColor(Color.rgb(224, 92, 92));
+    reset.setOnClickListener(v -> resetDialog());
+    root.addView(reset, margin(0, 18));
+  }
+
+  View row(String[] vals, boolean header, View.OnClickListener click) {
+    LinearLayout r = new LinearLayout(this);
+    r.setOrientation(LinearLayout.HORIZONTAL);
+    r.setPadding(dp(2), dp(5), dp(2), dp(5));
+    boolean twoLines = !header && vals[0].contains("\n");
+    for (int i = 0; i < vals.length; i++) {
+      TextView t = text(vals[i], header ? 10 : 13, i == 0 ? Color.WHITE : MUTED);
+      if (twoLines && i == 0) {
+        SpannableString styled = new SpannableString(vals[i]);
+        int split = vals[i].indexOf('\n') + 1;
+        styled.setSpan(
+            new ForegroundColorSpan(Color.argb(128, 255, 255, 255)),
+            split,
+            styled.length(),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        t.setText(styled);
+      }
+      if (header || i == 1) t.setTypeface(null, Typeface.BOLD);
+      t.setGravity(i == 0 ? Gravity.CENTER_VERTICAL : Gravity.CENTER);
+      r.addView(t, new LinearLayout.LayoutParams(0, dp(twoLines ? 64 : 48), i == 0 ? 3.4f : 1f));
+    }
+    if (click != null) {
+      r.setClickable(true);
+      r.setOnClickListener(click);
+    }
+    return r;
+  }
+
+  int[] stats(int p) {
+    int pts = 0, w = 0, d = 0, l = 0, gd = 0, gf = 0;
+    for (Game g : games) {
+      if (g.a != p && g.b != p) continue;
+      int mine = g.a == p ? g.ga : g.gb, other = g.a == p ? g.gb : g.ga;
+      gf += mine;
+      gd += mine - other;
+      if (mine > other) {
+        w++;
+        pts += 3;
+      } else if (mine == other) {
+        d++;
+        pts++;
+      } else l++;
+    }
+    return new int[] {pts, w, d, l, gd, gf};
+  }
+
+  void matchScreen(boolean editing) {
+    if (!editing && queue.isEmpty()) refillQueue();
+    int ai, bi;
+    if (editing) {
+      Game g = games.get(games.size() - 1);
+      ai = g.a;
+      bi = g.b;
+    } else {
+      String[] q = queue.get(0).split(":");
+      ai = Integer.parseInt(q[0]);
+      bi = Integer.parseInt(q[1]);
+    }
+    base(
+        editing ? "Correct latest result" : "Game " + (games.size() + 1),
+        editing ? "Only the latest match can be edited." : "Next home-and-away league fixture");
+    TextView versus =
+        text(
+            "HOME\n" + players.get(ai) + "\n\nVS\n\n" + players.get(bi) + "\nAWAY",
+            25,
+            Color.WHITE);
+    versus.setGravity(Gravity.CENTER);
+    versus.setTypeface(null, Typeface.BOLD);
+    root.addView(versus, margin(0, 20));
+    LinearLayout scores = new LinearLayout(this);
+    scores.setGravity(Gravity.CENTER);
+    EditText a = score();
+    EditText b = score();
+    scores.addView(a, new LinearLayout.LayoutParams(dp(92), dp(72)));
+    scores.addView(text("  —  ", 28, MUTED));
+    scores.addView(b, new LinearLayout.LayoutParams(dp(92), dp(72)));
+    root.addView(scores);
+    if (editing) {
+      Game g = games.get(games.size() - 1);
+      a.setText("" + g.ga);
+      b.setText("" + g.gb);
+    }
+    Button finish = button(editing ? "SAVE CORRECTION" : "FINISH MATCH");
+    int fa = ai, fb = bi;
+    finish.setOnClickListener(
+        v -> {
+          if (a.getText().length() == 0 || b.getText().length() == 0) {
+            toast("Enter both scores");
+            return;
+          }
+          int ga = Integer.parseInt(a.getText().toString()),
+              gb = Integer.parseInt(b.getText().toString());
+          new AlertDialog.Builder(this)
+              .setTitle(editing ? "Save corrected result?" : "Finish this match?")
+              .setMessage(players.get(fa) + "  " + ga + " – " + gb + "  " + players.get(fb))
+              .setNegativeButton("Cancel", null)
+              .setPositiveButton(
+                  "Confirm",
+                  (d, x) -> {
+                    if (editing) {
+                      Game g = games.get(games.size() - 1);
+                      g.ga = ga;
+                      g.gb = gb;
+                    } else {
+                      games.add(new Game(fa, fb, ga, gb));
+                      queue.remove(0);
+                    }
+                    save();
+                    tableScreen();
+                  })
+              .show();
+        });
+    root.addView(finish, margin(0, 24));
+    Button back = button("Cancel");
+    back.setOnClickListener(v -> tableScreen());
+    root.addView(back, margin(0, 8));
+  }
+
+  EditText score() {
+    EditText e = new EditText(this);
+    e.setTextColor(Color.WHITE);
+    e.setTextSize(28);
+    e.setGravity(Gravity.CENTER);
+    e.setHint("0");
+    e.setHintTextColor(MUTED);
+    e.setInputType(InputType.TYPE_CLASS_NUMBER);
+    e.setBackgroundTintList(android.content.res.ColorStateList.valueOf(GREEN));
+    return e;
+  }
+
+  void gamesScreen(int player) {
+    String title = player < 0 ? "All matches" : players.get(player);
+    base(
+        title,
+        player < 0
+            ? "Complete tournament history • home team is shown first"
+            : "Previously played matches • home team is shown first");
+    if (games.isEmpty()) root.addView(text("No matches played yet.", 16, MUTED));
+    for (int i = games.size() - 1; i >= 0; i--) {
+      Game g = games.get(i);
+      if (player >= 0 && g.a != player && g.b != player) continue;
+      LinearLayout card = new LinearLayout(this);
+      card.setOrientation(LinearLayout.VERTICAL);
+      card.setBackgroundColor(CARD);
+      TextView n = text("GAME " + (i + 1) + "  •  HOME / AWAY", 11, GREEN);
+      n.setTypeface(null, Typeface.BOLD);
+      card.addView(n);
+      TextView result =
+          text(
+              "HOME  "
+                  + players.get(g.a)
+                  + "   "
+                  + g.ga
+                  + " – "
+                  + g.gb
+                  + "   "
+                  + players.get(g.b)
+                  + "  AWAY",
+              17,
+              Color.WHITE);
+      result.setTypeface(null, Typeface.BOLD);
+      card.addView(result);
+      if (i == games.size() - 1) {
+        Button edit = button("Edit latest result");
+        edit.setOnClickListener(v -> matchScreen(true));
+        card.addView(edit, margin(8, 5));
+      }
+      root.addView(card, margin(0, 6));
+    }
+    Button back = button("‹  Back to table");
+    back.setOnClickListener(v -> tableScreen());
+    root.addView(back, margin(0, 20));
+  }
+
+  void resetDialog() {
+    AlertDialog d =
+        new AlertDialog.Builder(this)
+            .setTitle("Reset the whole tournament?")
+            .setMessage(
+                "All contestants and match results will be erased.\n\nPlease wait 10 seconds.")
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("YES (10)", null)
+            .create();
+    d.setOnShowListener(
+        x -> {
+          Button yes = d.getButton(-1);
+          yes.setEnabled(false);
+          new CountDownTimer(10000, 1000) {
+            public void onTick(long m) {
+              yes.setText("YES (" + (m / 1000 + 1) + ")");
+            }
+
+            public void onFinish() {
+              yes.setText("YES, RESET");
+              yes.setEnabled(true);
+              yes.setOnClickListener(
+                  v -> {
+                    players.clear();
+                    teams.clear();
+                    games.clear();
+                    queue.clear();
+                    prefs.edit().clear().apply();
+                    d.dismiss();
+                    setupScreen();
+                  });
+            }
+          }.start();
+        });
+    d.show();
+  }
+
+  void refillQueue() {
+    ArrayList<Integer> rotation = new ArrayList<>();
+    for (int i = 0; i < players.size(); i++) rotation.add(i);
+    Collections.shuffle(rotation);
+    if (rotation.size() % 2 == 1) rotation.add(-1);
+    int count = rotation.size(), rounds = count - 1;
+    ArrayList<String> firstLeg = new ArrayList<>();
+    for (int round = 0; round < rounds; round++) {
+      for (int i = 0; i < count / 2; i++) {
+        int left = rotation.get(i), right = rotation.get(count - 1 - i);
+        if (left < 0 || right < 0) continue;
+        boolean swap = (round + i) % 2 == 1;
+        int home = swap ? right : left, away = swap ? left : right;
+        firstLeg.add(home + ":" + away);
+      }
+      int last = rotation.remove(count - 1);
+      rotation.add(1, last);
+    }
+    queue.addAll(firstLeg);
+    for (String fixture : firstLeg) {
+      String[] pair = fixture.split(":");
+      queue.add(pair[1] + ":" + pair[0]);
+    }
+  }
+
+  void save() {
+    try {
+      JSONObject o = new JSONObject();
+      o.put("schedulerVersion", 2);
+      JSONArray p = new JSONArray();
+      for (String s : players) p.put(s);
+      o.put("players", p);
+      JSONArray ts = new JSONArray();
+      for (String s : teams) ts.put(s);
+      o.put("teams", ts);
+      JSONArray gs = new JSONArray();
+      for (Game g : games) gs.put(new JSONArray().put(g.a).put(g.b).put(g.ga).put(g.gb));
+      o.put("games", gs);
+      JSONArray q = new JSONArray();
+      for (String s : queue) q.put(s);
+      o.put("queue", q);
+      prefs.edit().putString("data", o.toString()).apply();
+    } catch (Exception ignored) {
+    }
+  }
+
+  void load() {
+    try {
+      String raw = prefs.getString("data", null);
+      if (raw == null) return;
+      JSONObject o = new JSONObject(raw);
+      JSONArray p = o.getJSONArray("players");
+      for (int i = 0; i < p.length(); i++) players.add(p.getString(i));
+      JSONArray ts = o.optJSONArray("teams");
+      for (int i = 0; i < players.size(); i++)
+        teams.add(ts != null && i < ts.length() ? ts.optString(i, "") : "");
+      JSONArray gs = o.getJSONArray("games");
+      for (int i = 0; i < gs.length(); i++) {
+        JSONArray g = gs.getJSONArray(i);
+        games.add(new Game(g.getInt(0), g.getInt(1), g.getInt(2), g.getInt(3)));
+      }
+      if (o.optInt("schedulerVersion", 1) >= 2) {
+        JSONArray q = o.optJSONArray("queue");
+        if (q != null) for (int i = 0; i < q.length(); i++) queue.add(q.getString(i));
+      } else if (players.size() >= 2) {
+        queue.clear();
+        refillQueue();
+        save();
+      }
+    } catch (Exception e) {
+      players.clear();
+      teams.clear();
+      games.clear();
+      queue.clear();
+    }
+  }
+
+  LinearLayout.LayoutParams margin(int h, int v) {
+    LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
+    p.setMargins(dp(h), dp(v), dp(h), dp(v));
+    return p;
+  }
+
+  int dp(int n) {
+    return (int) (n * getResources().getDisplayMetrics().density + .5f);
+  }
+
+  void toast(String s) {
+    Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+  }
+
+  @Override
+  public void onBackPressed() {
+    if (players.size() >= 2) tableScreen();
+    else super.onBackPressed();
+  }
 }
