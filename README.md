@@ -8,6 +8,13 @@
 - Optionally assign a football team to each contestant.
 - Automatically schedule repeating home-and-away league cycles.
 - Arrange fixtures in rounds so every available contestant plays before the next round begins, preventing long waits between matches.
+- Choose a finite league or a league followed by a knockout stage.
+- Configure the number of league matches per contestant and, for knockout tournaments, an even number of qualifiers.
+- Require the tournament format and all applicable numeric settings before a tournament can begin.
+- Automatically finish a league at its configured limit or advance knockout winners through the final.
+- Show an explicit transition from the completed league into a horizontally scrollable knockout bracket.
+- Populate the knockout tree with qualified contestants and results as each round is played.
+- Highlight the completed league winner and visually mute contestants eliminated from qualification or the knockout bracket.
 - Ensure every contestant plays every opponent once at home and once away per complete cycle.
 - Enter a score and confirm it before it is recorded.
 - Calculate points, wins, draws, losses and goal difference automatically.
@@ -46,5 +53,5 @@ Release updates must be signed with the same `release-key.jks` file. Keep this f
 - Author: Vilim Hlušička
 - Initial version date: 6 August 2026
 - Latest version date: 7 August 2026
-- Current version: 1.0.0
+- Current version: 1.1.4
 - Application ID: `com.debelatabla.fifaleague`
