@@ -52,6 +52,6 @@ Release updates must be signed with the same `release-key.jks` file. Keep this f
 
 - Author: Vilim Hlušička
 - Initial version date: 6 August 2026
-- Latest version date: 7 August 2026
-- Current version: 1.1.4
+- Latest version date: 16 August 2026
+- Current version: 1.1.5
 - Application ID: `com.debelatabla.fifaleague`

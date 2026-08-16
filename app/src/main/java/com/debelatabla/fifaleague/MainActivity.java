@@ -129,12 +129,16 @@ public class MainActivity extends Activity {
                 .setTitle("Čkiletova tabla")
                 .setMessage(
                     "Author: Vilim Hlusicka (vilim.hlusicka@gmail.com)\n\nVersion: "
-                        + BuildConfig.VERSION_NAME)
+                        + BuildConfig.VERSION_NAME
+                        + "\n\nChanges in 1.1.5:"
+                        + "\n• Added a version changelog."
+                        + "\n• Added current-version changes to this Info dialog."
+                        + "\n• Added spacing below the Info button for Android navigation controls.")
                 .setPositiveButton("OK", null)
                 .show());
     LinearLayout.LayoutParams infoParams = new LinearLayout.LayoutParams(dp(52), dp(52));
     infoParams.gravity = Gravity.CENTER_HORIZONTAL;
-    infoParams.setMargins(0, dp(6), 0, 0);
+    infoParams.setMargins(0, dp(6), 0, dp(20));
     root.addView(info, infoParams);
   }
 
