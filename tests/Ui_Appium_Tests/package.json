@@ -1,0 +1,24 @@
+{
+  "name": "ckiletova-tabla-appium-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Android Appium regression tests for Čkiletova tabla",
+  "scripts": {
+    "test": "wdio run ./wdio.conf.js --autoCompileOpts.autoCompile=false",
+    "test:setup": "wdio run ./wdio.conf.js --autoCompileOpts.autoCompile=false --spec ./specs/setup.spec.js",
+    "test:league": "wdio run ./wdio.conf.js --autoCompileOpts.autoCompile=false --spec ./specs/league.spec.js",
+    "test:knockout": "wdio run ./wdio.conf.js --autoCompileOpts.autoCompile=false --spec ./specs/knockout.spec.js",
+    "verify": "node ./scripts/verify-coverage.js",
+    "appium": "appium",
+    "driver:install": "APPIUM_HOME=./.appium appium driver install uiautomator2@4.2.9",
+    "driver:list": "APPIUM_HOME=./.appium appium driver list --installed"
+  },
+  "devDependencies": {
+    "@wdio/appium-service": "8.41.0",
+    "@wdio/cli": "8.41.0",
+    "@wdio/local-runner": "8.41.0",
+    "@wdio/mocha-framework": "8.41.0",
+    "@wdio/spec-reporter": "8.41.0",
+    "appium": "2.19.0"
+  }
+}
