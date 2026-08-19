@@ -7,6 +7,7 @@ const {
   fillPlayers,
   resetApp,
   startTournament,
+  tapElement,
   tapText,
   toastText,
   uiText,
@@ -52,11 +53,11 @@ describe('Feature 01 — Tournament setup screen', () => {
     await fillPlayers(['Ana', 'Bruno']);
     const assignButtons = await $$(uiText('＋ Assign team'));
     assert.ok(assignButtons.length >= 2);
-    await assignButtons[0].click();
+    await tapElement(assignButtons[0]);
     const teamField = (await visibleEditTexts())[0];
     await teamField.setValue('Dinamo Zagreb');
     await driver.hideKeyboard().catch(() => {});
-    await tapText('Save');
+    await tapText('SAVE');
     await expectText('Team: Dinamo Zagreb');
     await configureTournament({ type: 'league', matches: 2 });
     await tapText('CONFIRM CONTESTANTS');
@@ -71,7 +72,7 @@ describe('Feature 01 — Tournament setup screen', () => {
     await expectTextAbsent('League table');
     await tapText('Select tournament format  (required)');
     await tapText('League only');
-    await tapText('Save');
+    await tapText('SAVE');
     await browser.waitUntil(
       async () => (await driver.getPageSource()).includes('Enter a number from 1 to 100'),
       { timeout: 5000, timeoutMsg: 'Expected required match-count validation' }
@@ -93,7 +94,7 @@ describe('Feature 01 — Tournament setup screen', () => {
   it('CT-01-007 — Display application information', async () => {
     const info = await $('~Information');
     await info.waitForDisplayed();
-    await info.click();
+    await tapElement(info);
     await expectText('Čkiletova tabla');
     await expectTextContains('Author: Vilim Hlusicka (vilim.hlusicka@gmail.com)');
     await expectTextContains('Version: 1.1.5');

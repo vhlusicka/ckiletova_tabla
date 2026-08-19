@@ -15,6 +15,10 @@ Every documented test case has one normal Mocha `it()` block.
 ## Physical Android device preparation
 
 1. Enable **Developer options** and **USB debugging** on the device.
+   On OEM firmware that provides an additional **USB debugging (Security
+   settings)**, **USB debugging input**, **Disable permission monitoring**, or
+   similarly named option, enable it as well. Appium must be allowed to inject
+   input events.
 2. Connect the device by USB and accept its RSA authorization prompt.
 3. Confirm that ADB can see it:
 
@@ -69,7 +73,7 @@ Use another APK when required:
 APP_PATH=/absolute/path/to/application.apk npm test
 ```
 
-The WebdriverIO Appium service starts and stops the local Appium server automatically. Tests run serially because they share one physical device. Each scenario clears application data and creates its own required state unless the scenario explicitly tests persistence.
+The WebdriverIO Appium service starts and stops the local Appium server automatically. Tests run serially because they share one physical device. Each scenario clears the app's data in place to create clean state unless the scenario explicitly tests persistence. The run stops after its first failure.
 
 Verify that every documented CT ID has exactly one `it()` block:
 
@@ -84,5 +88,14 @@ npm run driver:list
 adb shell getprop ro.build.version.release
 adb shell pm list packages | grep debelatabla
 ```
+
+Confirm that the device permits automated input before starting the suite:
+
+```sh
+adb shell input tap 100 100
+```
+
+If this reports `INJECT_EVENTS permission`, the required OEM security option is
+still disabled and Appium cannot automate that device.
 
 Set `WDIO_LOG_LEVEL=debug` for detailed WebdriverIO logs. Appium service logs are written under `tests/Ui_Appium_Tests/logs/`.

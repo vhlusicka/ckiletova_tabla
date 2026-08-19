@@ -35,7 +35,9 @@ exports.config = {
   port: 4723,
   path: '/',
   logLevel: process.env.WDIO_LOG_LEVEL || 'info',
-  bail: 0,
+  // Stop after the first failure so a device-level restriction cannot trigger
+  // a clean reinstall for every remaining regression test.
+  bail: 1,
   waitforTimeout: 10000,
   connectionRetryTimeout: 120000,
   connectionRetryCount: 2,
@@ -56,7 +58,7 @@ exports.config = {
         args: {
           address: '127.0.0.1',
           port: 4723,
-          relaxedSecurity: false
+        relaxedSecurity: true
         },
         logPath: path.join(__dirname, 'logs')
       }

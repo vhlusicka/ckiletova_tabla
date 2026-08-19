@@ -13,6 +13,7 @@ const {
   resetApp,
   setupLeague,
   startTournament,
+  tapElement,
   tapText,
   tapTextContains,
   uiText,
@@ -137,7 +138,7 @@ describe('Feature 02 — League stage', () => {
     await tapText('All matches');
     const editButtons = await $$(uiText('Edit latest result'));
     assert.equal(editButtons.length, 1);
-    await editButtons[0].click();
+    await tapElement(editButtons[0]);
     const fields = await visibleEditTexts();
     await fields[0].clearValue();
     await fields[0].setValue('3');
@@ -183,7 +184,7 @@ describe('Feature 02 — League stage', () => {
     assert.equal(await initial.isEnabled(), false);
     const reset = await $(uiText('YES, RESET'));
     await reset.waitForEnabled({ timeout: 13000 });
-    await reset.click();
+    await tapElement(reset);
     await expectText('Čkiletova tabla');
     await expectText('Select tournament format  (required)');
     assert.equal((await visibleEditTexts()).length, 2);

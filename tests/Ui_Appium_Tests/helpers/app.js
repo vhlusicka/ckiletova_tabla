@@ -1,14 +1,6 @@
 const assert = require('node:assert/strict');
-const path = require('node:path');
 
 const APP_ID = 'com.debelatabla.fifaleague';
-const APP_PATH = path.resolve(
-  process.env.APP_PATH ||
-    path.join(
-      __dirname,
-      '../../../app/build/outputs/apk/release/Ckiletova-tabla-1.1.5.apk'
-    )
-);
 const PLAYERS_4 = ['Ana', 'Bruno', 'Carla', 'David'];
 const PLAYERS_6 = ['Ana', 'Bruno', 'Carla', 'David', 'Eva', 'Filip'];
 
@@ -26,6 +18,21 @@ async function displayed(selector, timeout = 10000) {
   return element;
 }
 
+async function tapElement(element) {
+  const [{ x, y }, { width, height }] = await Promise.all([
+    element.getLocation(),
+    element.getSize()
+  ]);
+  await driver.execute('mobile: shell', {
+    command: 'input',
+    args: [
+      'tap',
+      String(Math.round(x + width / 2)),
+      String(Math.round(y + height / 2))
+    ]
+  });
+}
+
 async function tapText(value) {
   let element = await $(uiText(value));
   if (!(await element.isDisplayed().catch(() => false))) {
@@ -34,13 +41,13 @@ async function tapText(value) {
     );
   }
   await element.waitForDisplayed({ timeout: 10000 });
-  await element.click();
+  await tapElement(element);
   return element;
 }
 
 async function tapTextContains(value) {
   const element = await displayed(uiTextContains(value));
-  await element.click();
+  await tapElement(element);
   return element;
 }
 
@@ -67,24 +74,14 @@ async function visibleEditTexts() {
 }
 
 async function replaceValue(element, value) {
-  await element.click();
+  await tapElement(element);
   await element.clearValue();
   await element.setValue(String(value));
 }
 
 async function resetApp() {
   await driver.terminateApp(APP_ID).catch(() => {});
-  await driver.execute('mobile: removeApp', {
-    appId: APP_ID,
-    keepData: false,
-    timeout: 30000
-  });
-  await driver.execute('mobile: installApp', {
-    appPath: APP_PATH,
-    grantPermissions: false,
-    replace: false,
-    timeout: 120000
-  });
+  await driver.execute('mobile: clearApp', { appId: APP_ID });
   await driver.activateApp(APP_ID);
   await expectText('Čkiletova tabla');
   await expectText('Select tournament format  (required)');
@@ -117,7 +114,7 @@ async function configureTournament({ type, matches, qualifiers }) {
   await replaceValue(fields[0], matches);
   if (type === 'knockout') await replaceValue(fields[1], qualifiers);
   await driver.hideKeyboard().catch(() => {});
-  await tapText('Save');
+  await tapText('SAVE');
 }
 
 async function startTournament({ players = PLAYERS_4, type = 'league', matches = 2, qualifiers = 4 } = {}) {
@@ -253,6 +250,7 @@ module.exports = {
   setupLeague,
   setupLeagueKnockout,
   startTournament,
+  tapElement,
   tapText,
   tapTextContains,
   toastText,
