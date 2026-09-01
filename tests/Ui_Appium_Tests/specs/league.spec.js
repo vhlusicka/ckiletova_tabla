@@ -99,7 +99,7 @@ describe('Feature 02 — League stage', () => {
   it('CT-02-004 — Maintain fair home and away scheduling', async () => {
     const homeCount = Object.fromEntries(PLAYERS_4.map((name) => [name, 0]));
     const awayCount = Object.fromEntries(PLAYERS_4.map((name) => [name, 0]));
-    while (!(await $(uiText('TOURNAMENT FINISHED'))).isExisting()) {
+    while (!(await $(uiText('Export results...'))).isExisting()) {
       await openNextLeagueGame();
       const sides = await currentLeagueSides();
       homeCount[sides.home] += 1;
@@ -154,9 +154,9 @@ describe('Feature 02 — League stage', () => {
 
   it('CT-02-007 — Finish a league-only tournament', async () => {
     await finishLeague();
-    const finished = await $(uiText('TOURNAMENT FINISHED'));
+    const finished = await $(uiText('Export results...'));
     await finished.waitForDisplayed();
-    assert.equal(await finished.isEnabled(), false);
+    assert.equal(await finished.isEnabled(), true);
     const firstDataRow = await $('//android.widget.LinearLayout/android.widget.TextView[contains(@text,"1  ")]');
     assert.equal(await firstDataRow.isDisplayed(), true);
   });

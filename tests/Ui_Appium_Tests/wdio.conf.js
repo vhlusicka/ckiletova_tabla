@@ -24,7 +24,7 @@ if (!process.env.ANDROID_HOME && !process.env.ANDROID_SDK_ROOT) {
 process.env.APPIUM_HOME ||= path.join(__dirname, '.appium');
 const defaultApk = path.join(
   projectRoot,
-  'app/build/outputs/apk/release/Ckiletova-tabla-1.1.5.apk'
+  'app/build/outputs/apk/release/Ckiletova-tabla-1.1.6.apk'
 );
 
 exports.config = {

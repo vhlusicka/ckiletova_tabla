@@ -5,13 +5,18 @@ import android.content.*;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.*;
+import android.net.Uri;
 import android.text.InputType;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
 import android.view.*;
 import android.widget.*;
+import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import org.json.*;
 
 public class MainActivity extends Activity {
@@ -32,6 +37,7 @@ public class MainActivity extends Activity {
   int leagueMatchesPerPlayer = 0;
   int knockoutQualifiers = 0;
   int currentKnockoutRound = -1;
+  long tournamentDateMillis = 0L;
   Button tournamentSettingsButton;
 
   static class Game {
@@ -130,10 +136,9 @@ public class MainActivity extends Activity {
                 .setMessage(
                     "Author: Vilim Hlusicka (vilim.hlusicka@gmail.com)\n\nVersion: "
                         + BuildConfig.VERSION_NAME
-                        + "\n\nChanges in 1.1.5:"
-                        + "\n• Added a version changelog."
-                        + "\n• Added current-version changes to this Info dialog."
-                        + "\n• Added spacing below the Info button for Android navigation controls.")
+                        + "\n\nChanges in 1.1.6:"
+                        + "\n• Added completed-tournament Excel export and sharing."
+                        + "\n• The workbook contains the final table, tournament date, and all match results.")
                 .setPositiveButton("OK", null)
                 .show());
     LinearLayout.LayoutParams infoParams = new LinearLayout.LayoutParams(dp(52), dp(52));
@@ -362,6 +367,7 @@ public class MainActivity extends Activity {
     games.clear();
     knockoutAdvancers.clear();
     phase = "league";
+    tournamentDateMillis = System.currentTimeMillis();
     refillQueue();
     save();
     tableScreen();
@@ -378,16 +384,16 @@ public class MainActivity extends Activity {
         "League table",
         phaseLabel + "  •  " + leagueGameCount() + " league games played  •  3 points for a win");
     String nextLabel;
-    if (phase.equals("finished")) nextLabel = "TOURNAMENT FINISHED";
+    if (phase.equals("finished")) nextLabel = "Export results...";
     else if (phase.equals("knockout_ready")) nextLabel = "GO TO KNOCKOUT  ›";
     else if (phase.equals("knockout")) nextLabel = "PLAY NEXT KNOCKOUT MATCH  ›";
     else nextLabel = "PLAY GAME " + (games.size() + 1) + "  ›";
     Button next = button(nextLabel);
-    next.setEnabled(!phase.equals("finished"));
-    next.setAlpha(phase.equals("finished") ? .55f : 1f);
     next.setOnClickListener(
         v -> {
-          if (phase.equals("knockout_ready")) {
+          if (phase.equals("finished")) {
+            exportResults();
+          } else if (phase.equals("knockout_ready")) {
             startKnockout();
             save();
             tableScreen();
@@ -746,6 +752,172 @@ public class MainActivity extends Activity {
     root.addView(back, margin(0, 20));
   }
 
+  void exportResults() {
+    try {
+      shareResultsWorkbook(createResultsWorkbook());
+    } catch (IOException error) {
+      toast("Could not create the Excel workbook");
+    } catch (ActivityNotFoundException error) {
+      toast("No sharing app is available");
+    }
+  }
+
+  File createResultsWorkbook() throws IOException {
+    File directory = new File(getCacheDir(), "exports");
+    if (!directory.exists() && !directory.mkdirs()) {
+      throw new IOException("Cannot create export directory");
+    }
+    File workbook = new File(directory, "Ckiletova-tabla-results.xlsx");
+    try (ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(workbook))) {
+      writeZipEntry(
+          zip,
+          "[Content_Types].xml",
+          "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+              + "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">"
+              + "<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>"
+              + "<Default Extension=\"xml\" ContentType=\"application/xml\"/>"
+              + "<Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/>"
+              + "<Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>"
+              + "<Override PartName=\"/xl/worksheets/sheet2.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/>"
+              + "<Override PartName=\"/xl/styles.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml\"/>"
+              + "</Types>");
+      writeZipEntry(
+          zip,
+          "_rels/.rels",
+          "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+              + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+              + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"xl/workbook.xml\"/>"
+              + "</Relationships>");
+      writeZipEntry(
+          zip,
+          "xl/workbook.xml",
+          "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+              + "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">"
+              + "<sheets><sheet name=\"Table\" sheetId=\"1\" r:id=\"rId1\"/>"
+              + "<sheet name=\"Results\" sheetId=\"2\" r:id=\"rId2\"/></sheets></workbook>");
+      writeZipEntry(
+          zip,
+          "xl/_rels/workbook.xml.rels",
+          "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+              + "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">"
+              + "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet1.xml\"/>"
+              + "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet\" Target=\"worksheets/sheet2.xml\"/>"
+              + "<Relationship Id=\"rId3\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/>"
+              + "</Relationships>");
+      writeZipEntry(zip, "xl/styles.xml", workbookStylesXml());
+      writeZipEntry(zip, "xl/worksheets/sheet1.xml", tableSheetXml());
+      writeZipEntry(zip, "xl/worksheets/sheet2.xml", resultsSheetXml());
+    }
+    return workbook;
+  }
+
+  String workbookStylesXml() {
+    return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+        + "<styleSheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
+        + "<fonts count=\"2\"><font><sz val=\"11\"/><name val=\"Calibri\"/></font>"
+        + "<font><b/><sz val=\"11\"/><name val=\"Calibri\"/></font></fonts>"
+        + "<fills count=\"2\"><fill><patternFill patternType=\"none\"/></fill><fill><patternFill patternType=\"gray125\"/></fill></fills>"
+        + "<borders count=\"1\"><border><left/><right/><top/><bottom/><diagonal/></border></borders>"
+        + "<cellStyleXfs count=\"1\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\"/></cellStyleXfs>"
+        + "<cellXfs count=\"2\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/>"
+        + "<xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/></cellXfs>"
+        + "</styleSheet>";
+  }
+
+  String tableSheetXml() {
+    ArrayList<String[]> rows = new ArrayList<>();
+    String date = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault()).format(new Date(tournamentDateMillis));
+    rows.add(new String[] {"Tournament date: " + date});
+    rows.add(new String[] {});
+    rows.add(new String[] {"#  PLAYER", "PT", "P", "W", "D", "L", "GD"});
+    ArrayList<Integer> order = standingsOrder();
+    for (int rank = 0; rank < order.size(); rank++) {
+      int id = order.get(rank);
+      int[] stats = stats(id);
+      String team = id < teams.size() ? teams.get(id) : "";
+      String player = (rank + 1) + "  " + players.get(id) + (team.isEmpty() ? "" : "\n     " + team);
+      rows.add(
+          new String[] {
+            player,
+            String.valueOf(stats[0]),
+            String.valueOf(stats[1] + stats[2] + stats[3]),
+            String.valueOf(stats[1]),
+            String.valueOf(stats[2]),
+            String.valueOf(stats[3]),
+            (stats[4] > 0 ? "+" : "") + stats[4]
+          });
+    }
+    return sheetXml(rows, 3, true);
+  }
+
+  String resultsSheetXml() {
+    ArrayList<String[]> rows = new ArrayList<>();
+    rows.add(new String[] {"GAME", "TYPE", "HOME / CONTESTANT 1", "AWAY / CONTESTANT 2", "RESULT"});
+    for (int i = 0; i < games.size(); i++) {
+      Game game = games.get(i);
+      rows.add(
+          new String[] {
+            String.valueOf(i + 1),
+            game.knockout ? "KNOCKOUT" : "LEAGUE",
+            players.get(game.a),
+            players.get(game.b),
+            game.ga + " – " + game.gb
+          });
+    }
+    return sheetXml(rows, 1, false);
+  }
+
+  String sheetXml(ArrayList<String[]> rows, int headerRow, boolean mergeDate) {
+    StringBuilder xml =
+        new StringBuilder(
+            "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
+                + "<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\">"
+                + "<cols><col min=\"1\" max=\"1\" width=\"28\" customWidth=\"1\"/>"
+                + "<col min=\"2\" max=\"7\" width=\"18\" customWidth=\"1\"/></cols><sheetData>");
+    for (int rowIndex = 0; rowIndex < rows.size(); rowIndex++) {
+      String[] row = rows.get(rowIndex);
+      int number = rowIndex + 1;
+      xml.append("<row r=\"").append(number).append("\">");
+      for (int column = 0; column < row.length; column++) {
+        String ref = columnName(column) + number;
+        int style = number == headerRow || (mergeDate && number == 1) ? 1 : 0;
+        xml.append("<c r=\"").append(ref).append("\" t=\"inlineStr\" s=\"").append(style).append("\"><is><t xml:space=\"preserve\">")
+            .append(xmlEscape(row[column]))
+            .append("</t></is></c>");
+      }
+      xml.append("</row>");
+    }
+    xml.append("</sheetData>");
+    if (mergeDate) xml.append("<mergeCells count=\"1\"><mergeCell ref=\"A1:G1\"/></mergeCells>");
+    return xml.append("</worksheet>").toString();
+  }
+
+  String columnName(int index) {
+    return String.valueOf((char) ('A' + index));
+  }
+
+  String xmlEscape(String value) {
+    return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+  }
+
+  void writeZipEntry(ZipOutputStream zip, String name, String content) throws IOException {
+    zip.putNextEntry(new ZipEntry(name));
+    zip.write(content.getBytes("UTF-8"));
+    zip.closeEntry();
+  }
+
+  void shareResultsWorkbook(File workbook) {
+    Uri uri = Uri.parse("content://" + getPackageName() + ".exports/" + workbook.getName());
+    Intent share = new Intent(Intent.ACTION_SEND);
+    share.setType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    share.putExtra(Intent.EXTRA_SUBJECT, "Čkiletova tabla tournament results");
+    share.putExtra(Intent.EXTRA_TEXT, "The completed tournament results are attached.");
+    share.putExtra(Intent.EXTRA_STREAM, uri);
+    share.setClipData(ClipData.newUri(getContentResolver(), workbook.getName(), uri));
+    share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+    startActivity(Intent.createChooser(share, "Share tournament results"));
+  }
+
   void resetDialog() {
     AlertDialog d =
         new AlertDialog.Builder(this)
@@ -776,6 +948,7 @@ public class MainActivity extends Activity {
                     knockoutAdvancers.clear();
                     knockoutBracketRounds.clear();
                     currentKnockoutRound = -1;
+                    tournamentDateMillis = 0L;
                     tournamentMode = "";
                     phase = "setup";
                     leagueMatchesPerPlayer = 0;
@@ -941,6 +1114,7 @@ public class MainActivity extends Activity {
       o.put("leagueMatchesPerPlayer", leagueMatchesPerPlayer);
       o.put("knockoutQualifiers", knockoutQualifiers);
       o.put("currentKnockoutRound", currentKnockoutRound);
+      o.put("tournamentDateMillis", tournamentDateMillis);
       JSONArray p = new JSONArray();
       for (String s : players) p.put(s);
       o.put("players", p);
@@ -981,12 +1155,15 @@ public class MainActivity extends Activity {
       String raw = prefs.getString("data", null);
       if (raw == null) return;
       JSONObject o = new JSONObject(raw);
+      boolean needsTournamentDateMigration = !o.has("tournamentDateMillis");
       int schedulerVersion = o.optInt("schedulerVersion", 1);
       tournamentMode = o.optString("tournamentMode", "league");
       phase = o.optString("phase", "league");
       leagueMatchesPerPlayer = o.optInt("leagueMatchesPerPlayer", 2);
       knockoutQualifiers = o.optInt("knockoutQualifiers", 2);
       currentKnockoutRound = o.optInt("currentKnockoutRound", -1);
+      tournamentDateMillis = o.optLong("tournamentDateMillis", 0L);
+      if (tournamentDateMillis == 0L) tournamentDateMillis = System.currentTimeMillis();
       JSONArray p = o.getJSONArray("players");
       for (int i = 0; i < p.length(); i++) players.add(p.getString(i));
       JSONArray ts = o.optJSONArray("teams");
@@ -1028,7 +1205,7 @@ public class MainActivity extends Activity {
         }
         phase = queue.isEmpty() && !games.isEmpty() ? "finished" : "league";
         save();
-      }
+      } else if (needsTournamentDateMigration) save();
     } catch (Exception e) {
       players.clear();
       teams.clear();
