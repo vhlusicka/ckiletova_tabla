@@ -33,7 +33,7 @@ Every documented test case has one normal Mocha `it()` block.
    ../../gradlew -p ../.. assembleRelease
    ```
 
-The default APK is `../../app/build/outputs/apk/release/Ckiletova-tabla-1.1.6.apk`.
+The default APK is `../../app/build/outputs/apk/release/Ckiletova-tabla-1.1.7.apk`.
 
 ## Install dependencies
 

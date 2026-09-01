@@ -136,9 +136,10 @@ public class MainActivity extends Activity {
                 .setMessage(
                     "Author: Vilim Hlusicka (vilim.hlusicka@gmail.com)\n\nVersion: "
                         + BuildConfig.VERSION_NAME
-                        + "\n\nChanges in 1.1.6:"
-                        + "\n• Added completed-tournament Excel export and sharing."
-                        + "\n• The workbook contains the final table, tournament date, and all match results.")
+                        + "\n\nChanges in 1.1.7:"
+                        + "\n• Reduced the protected tournament-reset countdown to five seconds."
+                        + "\n• Widened the goal-difference column to keep signed values on one line."
+                        + "\n• Condensed the README feature overview.")
                 .setPositiveButton("OK", null)
                 .show());
     LinearLayout.LayoutParams infoParams = new LinearLayout.LayoutParams(dp(52), dp(52));
@@ -561,7 +562,8 @@ public class MainActivity extends Activity {
       }
       if (header || i == 1) t.setTypeface(null, Typeface.BOLD);
       t.setGravity(i == 0 ? Gravity.CENTER_VERTICAL : Gravity.CENTER);
-      r.addView(t, new LinearLayout.LayoutParams(0, dp(twoLines ? 64 : 48), i == 0 ? 3.4f : 1f));
+      float columnWeight = i == 0 ? 3.4f : (i == vals.length - 1 ? 1.15f : 1f);
+      r.addView(t, new LinearLayout.LayoutParams(0, dp(twoLines ? 64 : 48), columnWeight));
     }
     if (click != null) {
       r.setClickable(true);
@@ -923,15 +925,15 @@ public class MainActivity extends Activity {
         new AlertDialog.Builder(this)
             .setTitle("Reset the whole tournament?")
             .setMessage(
-                "All contestants and match results will be erased.\n\nPlease wait 10 seconds.")
+                "All contestants and match results will be erased.\n\nPlease wait 5 seconds.")
             .setNegativeButton("Cancel", null)
-            .setPositiveButton("YES (10)", null)
+            .setPositiveButton("YES (5)", null)
             .create();
     d.setOnShowListener(
         x -> {
           Button yes = d.getButton(-1);
           yes.setEnabled(false);
-          new CountDownTimer(10000, 1000) {
+          new CountDownTimer(5000, 1000) {
             public void onTick(long m) {
               yes.setText("YES (" + (m / 1000 + 1) + ")");
             }

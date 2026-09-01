@@ -2,6 +2,15 @@
 
 All notable changes to **Čkiletova tabla** are recorded in this file. Entries are grouped by released application version, with the newest release first.
 
+## [1.1.7] — 2026-09-01
+
+### Changed
+
+- Reduced the protected tournament-reset countdown from ten seconds to five seconds.
+- Widened the goal-difference column so signed values remain on one line.
+- Condensed the README feature overview for easier scanning.
+- Updated regression and Appium coverage for the reset countdown and signed goal differences.
+
 ## [1.1.6] — 2026-09-01
 
 ### Added
