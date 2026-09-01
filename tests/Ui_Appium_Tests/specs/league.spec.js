@@ -65,6 +65,8 @@ describe('Feature 02 — League stage', () => {
     const awayRow = await rowValues(first.away);
     assert.deepEqual(homeRow.slice(1, 6), ['3', '1', '1', '0', '0']);
     assert.deepEqual(awayRow.slice(1, 6), ['0', '1', '0', '0', '1']);
+    assert.equal(homeRow[6], '+1');
+    assert.equal(awayRow[6], '-1');
 
     await openNextLeagueGame();
     const second = await currentLeagueSides();
@@ -179,11 +181,12 @@ describe('Feature 02 — League stage', () => {
   it('CT-02-009 — Reset the tournament with countdown protection', async () => {
     await tapText('Reset tournament');
     await expectText('Reset the whole tournament?');
-    const initial = await $(uiText('YES (10)'));
+    await expectTextContains('Please wait 5 seconds.');
+    const initial = await $(uiText('YES (5)'));
     await initial.waitForDisplayed();
     assert.equal(await initial.isEnabled(), false);
     const reset = await $(uiText('YES, RESET'));
-    await reset.waitForEnabled({ timeout: 13000 });
+    await reset.waitForEnabled({ timeout: 8000 });
     await tapElement(reset);
     await expectText('Čkiletova tabla');
     await expectText('Select tournament format  (required)');

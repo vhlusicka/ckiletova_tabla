@@ -97,10 +97,10 @@ describe('Feature 01 — Tournament setup screen', () => {
     await tapElement(info);
     await expectText('Čkiletova tabla');
     await expectTextContains('Author: Vilim Hlusicka (vilim.hlusicka@gmail.com)');
-    await expectTextContains('Version: 1.1.6');
-    await expectTextContains('Changes in 1.1.6:');
-    await expectTextContains('Added completed-tournament Excel export and sharing.');
+    await expectTextContains('Version: 1.1.7');
+    await expectTextContains('Changes in 1.1.7:');
+    await expectTextContains('Reduced the protected tournament-reset countdown to five seconds.');
     await tapText('OK');
-    await expectTextAbsent('Changes in 1.1.6:');
+    await expectTextAbsent('Changes in 1.1.7:');
   });
 });
