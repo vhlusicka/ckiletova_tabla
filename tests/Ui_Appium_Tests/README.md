@@ -7,6 +7,7 @@ This directory contains the Android regression suite derived from [`../CT Test S
 - `specs/setup.spec.js` — Feature 01, CT-01-001 through CT-01-007
 - `specs/league.spec.js` — Feature 02, CT-02-001 through CT-02-009
 - `specs/knockout.spec.js` — Feature 03, CT-03-001 through CT-03-008
+- `specs/export.spec.js` — Feature 04, CT-04-001 through CT-04-002
 - `helpers/app.js` — reusable Android interactions and tournament setup flows
 - `wdio.conf.js` — physical-device capabilities and automatic Appium server configuration
 
@@ -32,7 +33,7 @@ Every documented test case has one normal Mocha `it()` block.
    ../../gradlew -p ../.. assembleRelease
    ```
 
-The default APK is `../../app/build/outputs/apk/release/Ckiletova-tabla-1.1.5.apk`.
+The default APK is `../../app/build/outputs/apk/release/Ckiletova-tabla-1.1.6.apk`.
 
 ## Install dependencies
 
@@ -65,6 +66,7 @@ Run one feature only:
 npm run test:setup
 npm run test:league
 npm run test:knockout
+npm run test:export
 ```
 
 Use another APK when required:

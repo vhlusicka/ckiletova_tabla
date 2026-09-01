@@ -2,6 +2,15 @@
 
 All notable changes to **Čkiletova tabla** are recorded in this file. Entries are grouped by released application version, with the newest release first.
 
+## [1.1.6] — 2026-09-01
+
+### Added
+
+- Added Excel export after a tournament finishes.
+- Added a final standings sheet with the persisted tournament date and a results sheet containing every match.
+- Added an Android share-chooser handoff with the generated workbook attached.
+- Added regression and Appium coverage for export availability and workbook sharing.
+
 ## [1.1.5] — 2026-08-16
 
 ### Added

@@ -198,7 +198,7 @@ async function playNext({ first = 1, second = 0, players = PLAYERS_4, knockout =
 
 async function finishLeague({ players = PLAYERS_4, score = [1, 0] } = {}) {
   for (let guard = 0; guard < 100; guard += 1) {
-    if (await (await $(uiText('TOURNAMENT FINISHED'))).isExisting()) return;
+    if (await (await $(uiText('Export results...'))).isExisting()) return;
     if (await (await $(uiText('GO TO KNOCKOUT  ›'))).isExisting()) return;
     await playNext({ first: score[0], second: score[1], players });
   }

@@ -8,6 +8,7 @@
     "test:setup": "wdio run ./wdio.conf.js --autoCompileOpts.autoCompile=false --spec ./specs/setup.spec.js",
     "test:league": "wdio run ./wdio.conf.js --autoCompileOpts.autoCompile=false --spec ./specs/league.spec.js",
     "test:knockout": "wdio run ./wdio.conf.js --autoCompileOpts.autoCompile=false --spec ./specs/knockout.spec.js",
+    "test:export": "wdio run ./wdio.conf.js --autoCompileOpts.autoCompile=false --spec ./specs/export.spec.js",
     "verify": "node ./scripts/verify-coverage.js",
     "appium": "appium",
     "driver:install": "APPIUM_HOME=./.appium appium driver install uiautomator2@4.2.9",

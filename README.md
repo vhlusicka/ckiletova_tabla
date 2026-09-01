@@ -21,6 +21,8 @@
 - Open any contestant to see their complete match history.
 - View all recorded matches with home and away teams clearly identified.
 - Correct the result of the latest match.
+- Export a completed tournament to an Excel workbook through Android's share chooser.
+- Include the tournament date and final standings on the first sheet and all match results on the second.
 - Reset the tournament after a protected ten-second countdown.
 - Store all tournament information locally; no account or internet connection is required.
 
@@ -52,6 +54,6 @@ Release updates must be signed with the same `release-key.jks` file. Keep this f
 
 - Author: Vilim Hlušička
 - Initial version date: 6 August 2026
-- Latest version date: 16 August 2026
-- Current version: 1.1.5
+- Latest version date: 1 September 2026
+- Current version: 1.1.6
 - Application ID: `com.debelatabla.fifaleague`

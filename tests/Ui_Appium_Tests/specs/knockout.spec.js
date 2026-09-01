@@ -86,9 +86,9 @@ describe('Feature 03 — Knockout stage', () => {
     await playKnockout(2, 0);
     await expectText('FINAL');
     await playKnockout(1, 0);
-    const finished = await $(uiText('TOURNAMENT FINISHED'));
+    const finished = await $(uiText('Export results...'));
     await finished.waitForDisplayed();
-    assert.equal(await finished.isEnabled(), false);
+    assert.equal(await finished.isEnabled(), true);
     await expectText('FINAL');
   });
 
