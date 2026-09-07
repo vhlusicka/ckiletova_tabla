@@ -36,6 +36,22 @@ The project uses Java 17, Gradle 8.9 and Android SDK 35. From the project root, 
 
 Release updates must be signed with the same `release-key.jks` file. Keep this file and its credentials private and backed up; Android will reject an update signed with a different key.
 
+## Testing
+
+The [regression test specification](tests/CT%20Test%20Specification.md) documents the primary setup, league, knockout, persistence, reset, history, and results-export journeys in Gherkin syntax. Each test case has a stable `CT-*` ID and indicates whether it is automated.
+
+Android UI regression tests are implemented with Appium 2, WebdriverIO, Mocha, and the UiAutomator2 driver. They run serially on a connected physical Android device, clear application data between scenarios except for persistence tests, and stop on the first failure.
+
+From `tests/Ui_Appium_Tests`, install the dependencies and run the complete suite:
+
+```sh
+npm install
+npm run driver:install
+npm test
+```
+
+Run `npm run verify` to confirm that every documented `CT-*` test case has exactly one corresponding Mocha test. See the [Appium tests README](tests/Ui_Appium_Tests/README.md) for device preparation, feature-specific commands, configuration options, and troubleshooting.
+
 ## Project information
 
 - Author: Vilim Hlušička
