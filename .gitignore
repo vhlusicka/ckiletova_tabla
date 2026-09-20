@@ -5,6 +5,7 @@
 # Node/Appium dependencies and reports
 node_modules/
 tests/Ui_Appium_Tests/logs/
+tests/Ui_Appium_Tests/screenshots/
 tests/Ui_Appium_Tests/.appium/
 
 # Machine-specific Android SDK configuration

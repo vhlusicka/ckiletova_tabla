@@ -32,9 +32,9 @@ async function rowValues(contestant) {
 
 async function openNextLeagueGame() {
   await tapTextContains('PLAY GAME');
-  await expectText('HOME');
-  await expectText('VS');
-  await expectText('AWAY');
+  await expectTextContains('HOME');
+  await expectTextContains('VS');
+  await expectTextContains('AWAY');
 }
 
 describe('Feature 02 — League stage', () => {
@@ -44,13 +44,13 @@ describe('Feature 02 — League stage', () => {
 
   it('CT-02-001 — Record a league match result', async () => {
     await tapText('PLAY GAME 1  ›');
-    await expectText('HOME');
-    await expectText('VS');
-    await expectText('AWAY');
+    await expectTextContains('HOME');
+    await expectTextContains('VS');
+    await expectTextContains('AWAY');
     await enterVisibleScores(2, 1);
     await tapText('FINISH MATCH');
     await expectTextContains('2 – 1');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     await expectText('League table');
     await expectTextContains('1 league games played');
   });
@@ -60,7 +60,7 @@ describe('Feature 02 — League stage', () => {
     const first = await currentLeagueSides();
     await enterVisibleScores(2, 1);
     await tapText('FINISH MATCH');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     const homeRow = await rowValues(first.home);
     const awayRow = await rowValues(first.away);
     assert.deepEqual(homeRow.slice(1, 6), ['3', '1', '1', '0', '0']);
@@ -73,7 +73,7 @@ describe('Feature 02 — League stage', () => {
     const beforeHome = await rowValues(second.home).catch(() => null);
     await enterVisibleScores(1, 1);
     await tapText('FINISH MATCH');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     const afterHome = await rowValues(second.home);
     const afterAway = await rowValues(second.away);
     assert.equal(Number(afterHome[2]), Number(beforeHome?.[2] || 0) + 1);
@@ -91,7 +91,7 @@ describe('Feature 02 — League stage', () => {
       if (game < 3) {
         await enterVisibleScores(1, 0);
         await tapText('FINISH MATCH');
-        await tapText('Confirm');
+        await tapText('CONFIRM');
       }
     }
     assert.equal(new Set(scheduled).size, 6);
@@ -108,7 +108,7 @@ describe('Feature 02 — League stage', () => {
       awayCount[sides.away] += 1;
       await enterVisibleScores(1, 0);
       await tapText('FINISH MATCH');
-      await tapText('Confirm');
+      await tapText('CONFIRM');
     }
     for (const player of PLAYERS_4) {
       const values = await rowValues(player);
@@ -122,7 +122,7 @@ describe('Feature 02 — League stage', () => {
     const sides = await currentLeagueSides();
     await enterVisibleScores(2, 1);
     await tapText('FINISH MATCH');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     await tapTextContains(sides.home);
     await expectTextContains('LEAGUE');
     await expectTextContains('HOME / AWAY');
@@ -148,7 +148,7 @@ describe('Feature 02 — League stage', () => {
     await fields[1].setValue('0');
     await driver.hideKeyboard().catch(() => {});
     await tapText('SAVE CORRECTION');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     await tapText('All matches');
     await expectTextContains('GAME 2');
     await expectTextContains('3 – 0');

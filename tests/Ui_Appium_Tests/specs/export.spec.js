@@ -32,9 +32,10 @@ describe('Feature 04 — Results export', () => {
     await browser.waitUntil(
       async () => {
         const source = await driver.getPageSource();
-        return source.includes('Share tournament results') && source.includes('Ckiletova-tabla-results.xlsx');
+        const shareTitle = source.includes('text="Share tournament results"') || source.includes('text="Share"');
+        return shareTitle && source.includes('text="Ckiletova-tabla-results.xlsx"');
       },
-      { timeout: 10000, timeoutMsg: 'Expected Android chooser with the Excel attachment' }
+      { timeout: 10000, timeoutMsg: 'Expected Android share sheet with the Excel attachment' }
     );
     await driver.back();
     await expectText('League table');

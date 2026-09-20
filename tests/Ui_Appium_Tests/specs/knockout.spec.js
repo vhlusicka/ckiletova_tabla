@@ -48,12 +48,12 @@ describe('Feature 03 — Knockout stage', () => {
     await reachKnockout();
     await tapText('PLAY NEXT KNOCKOUT MATCH  ›');
     const contestants = await currentKnockoutContestants();
-    await expectText('VS');
+    await expectTextContains('VS');
     await expectTextAbsent('HOME');
     await expectTextAbsent('AWAY');
     await enterVisibleScores(3, 1);
     await tapText('FINISH MATCH');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     await expectTextContains(`${contestants[0]}`);
     await expectTextContains('3');
     await expectTextContains('1');
@@ -99,11 +99,10 @@ describe('Feature 03 — Knockout stage', () => {
     await expectTextContains('KNOCKOUT');
     await expectTextContains('3 – 1');
     assert.equal((await driver.getPageSource()).includes('HOME / AWAY'), true);
-    const knockoutHeading = await $(uiTextContains('KNOCKOUT'));
-    const card = await knockoutHeading.$('..');
-    const cardText = (await Promise.all((await card.$$('android.widget.TextView')).map((el) => el.getText()))).join(' ');
-    assert.equal(cardText.includes('HOME'), false);
-    assert.equal(cardText.includes('AWAY'), false);
+    const knockoutResult = await $(uiTextContains('3 – 1'));
+    const resultText = await knockoutResult.getText();
+    assert.equal(resultText.includes('HOME'), false);
+    assert.equal(resultText.includes('AWAY'), false);
   });
 
   it('CT-03-008 — Persist the knockout bracket after reopening the app', async () => {

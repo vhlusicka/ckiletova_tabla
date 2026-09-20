@@ -79,6 +79,13 @@ async function replaceValue(element, value) {
   await element.setValue(String(value));
 }
 
+async function closeKeyboardAfterInput() {
+  if (!(await driver.isKeyboardShown())) return;
+  await driver.hideKeyboard().catch(() => {});
+  if (await driver.isKeyboardShown()) await driver.pressKeyCode(4);
+  assert.equal(await driver.isKeyboardShown(), false, 'Android keyboard remained open after input');
+}
+
 async function resetApp() {
   await driver.terminateApp(APP_ID).catch(() => {});
   await driver.execute('mobile: clearApp', { appId: APP_ID });
@@ -89,7 +96,18 @@ async function resetApp() {
 
 async function relaunchApp() {
   await driver.terminateApp(APP_ID);
-  await driver.activateApp(APP_ID);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await driver.activateApp(APP_ID);
+    try {
+      await browser.waitUntil(
+        async () => (await driver.getCurrentPackage()) === APP_ID,
+        { timeout: 5000, timeoutMsg: `Expected ${APP_ID} to be in the foreground after reopening` }
+      );
+      return;
+    } catch (error) {
+      if (attempt === 1) throw error;
+    }
+  }
 }
 
 async function fillPlayers(names) {
@@ -101,8 +119,8 @@ async function fillPlayers(names) {
         `android=new UiScrollable(new UiSelector().scrollable(true)).scrollIntoView(new UiSelector().text(${JSON.stringify(`Contestant ${index + 1}`)}))`
       );
     }
-    await replaceValue(field, names[index]);
-    await driver.hideKeyboard().catch(() => {});
+    await field.setValue(names[index]);
+    await closeKeyboardAfterInput();
   }
 }
 
@@ -141,17 +159,13 @@ async function setupLeagueKnockout(options = {}) {
 }
 
 async function currentMatchPlayers(candidates) {
-  const found = [];
-  for (const name of candidates) {
-    const element = await $(uiText(name));
-    if ((await element.isExisting()) && (await element.isDisplayed())) found.push(name);
-  }
-  if (found.length === 2) return found;
-
-  const source = await driver.getPageSource();
-  const sourceMatches = candidates.filter((name) => source.includes(`text="${name}"`));
-  assert.equal(sourceMatches.length, 2, `Expected two match contestants, found: ${sourceMatches}`);
-  return sourceMatches;
+  const banner = await displayed(uiTextContains('VS'));
+  const found = (await banner.getText())
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => candidates.includes(line));
+  assert.equal(found.length, 2, `Expected two match contestants, found: ${found}`);
+  return found;
 }
 
 async function currentLeagueSides() {
@@ -191,7 +205,7 @@ async function playNext({ first = 1, second = 0, players = PLAYERS_4, knockout =
   await enterVisibleScores(first, second);
   await tapText('FINISH MATCH');
   await expectTextContains(`${first} – ${second}`);
-  await tapText('Confirm');
+  await tapText('CONFIRM');
   await expectText('League table');
   return contestants;
 }

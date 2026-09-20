@@ -1,5 +1,6 @@
 const path = require('node:path');
 const fs = require('node:fs');
+const { startRun, recordTest, printSummary } = require('./helpers/test-report');
 
 const projectRoot = path.resolve(__dirname, '../..');
 const localPropertiesPath = path.join(projectRoot, 'local.properties');
@@ -46,6 +47,20 @@ exports.config = {
     autoCompile: false
   },
   reporters: ['spec'],
+  onPrepare: () => {
+    if (!process.env.DEBELA_TEST_REPORT_FILE) startRun();
+  },
+  afterTest: async (test, context, { passed }) => {
+    await recordTest(test.title, passed, browser);
+  },
+  afterHook: async (hook, context, { passed }) => {
+    if (!passed && context?.currentTest?.title) {
+      await recordTest(context.currentTest.title, false, browser);
+    }
+  },
+  onComplete: () => {
+    if (!process.env.DEBELA_TEST_WRAPPED) process.once('exit', printSummary);
+  },
   mochaOpts: {
     ui: 'bdd',
     timeout: 180000

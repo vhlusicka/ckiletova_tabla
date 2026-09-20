@@ -77,6 +77,8 @@ APP_PATH=/absolute/path/to/application.apk npm test
 
 The WebdriverIO Appium service starts and stops the local Appium server automatically. Tests run serially because they share one physical device. Each scenario clears the app's data in place to create clean state unless the scenario explicitly tests persistence. The run stops after its first failure.
 
+After the WebdriverIO output, the terminal prints one final table of the test cases that executed and their pass/fail results, including when the run fails. Failed cases capture a screenshot of the connected device under `screenshots/<run>/`. Each PNG filename includes the test case ID and title, and the terminal prints its path before the table. The `screenshots/` directory is ignored by Git.
+
 Verify that every documented CT ID has exactly one `it()` block:
 
 ```sh
