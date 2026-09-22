@@ -18,6 +18,7 @@ async function completeLeague() {
 
 describe('Feature 04 — Results export', () => {
   it('CT-04-001 — Offer export only after tournament completion', async () => {
+    console.log('Starting test: CT-04-001 — Offer export only after tournament completion');
     await setupLeague();
     await expectTextAbsent('Export results...');
     await finishLeague();
@@ -27,6 +28,7 @@ describe('Feature 04 — Results export', () => {
   });
 
   it('CT-04-002 — Share the completed tournament workbook', async () => {
+    console.log('Starting test: CT-04-002 — Share the completed tournament workbook');
     await completeLeague();
     await tapText('Export results...');
     await browser.waitUntil(

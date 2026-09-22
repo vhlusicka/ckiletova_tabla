@@ -30,15 +30,19 @@ const defaultApk = path.join(
 
 exports.config = {
   runner: 'local',
-  specs: [path.join(__dirname, 'specs/**/*.spec.js')],
+  specs: [
+    path.join(__dirname, 'specs/CT-01_setup.spec.js'),
+    path.join(__dirname, 'specs/CT-02_league.spec.js'),
+    path.join(__dirname, 'specs/CT-03_knockout.spec.js'),
+    path.join(__dirname, 'specs/CT-04_export.spec.js')
+  ],
   maxInstances: 1,
   hostname: '127.0.0.1',
   port: 4723,
   path: '/',
   logLevel: process.env.WDIO_LOG_LEVEL || 'info',
-  // Stop after the first failure so a device-level restriction cannot trigger
-  // a clean reinstall for every remaining regression test.
-  bail: 1,
+  // Run the complete suite so the final report contains every test result.
+  bail: 0,
   waitforTimeout: 10000,
   connectionRetryTimeout: 120000,
   connectionRetryCount: 2,
@@ -50,12 +54,12 @@ exports.config = {
   onPrepare: () => {
     if (!process.env.DEBELA_TEST_REPORT_FILE) startRun();
   },
-  afterTest: async (test, context, { passed }) => {
-    await recordTest(test.title, passed, browser);
+  afterTest: async (test, context, { passed, error }) => {
+    await recordTest(test.title, passed, browser, error);
   },
-  afterHook: async (hook, context, { passed }) => {
+  afterHook: async (hook, context, { passed, error }) => {
     if (!passed && context?.currentTest?.title) {
-      await recordTest(context.currentTest.title, false, browser);
+      await recordTest(context.currentTest.title, false, browser, error);
     }
   },
   onComplete: () => {

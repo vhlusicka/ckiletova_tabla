@@ -20,6 +20,7 @@ describe('Feature 01 — Tournament setup screen', () => {
   });
 
   it('CT-01-001 — Display a fresh tournament setup screen', async () => {
+    console.log('Starting test: CT-01-001 — Display a fresh tournament setup screen');
     await expectText('Čkiletova tabla');
     await expectText('Create a tournament. Add 2–8 contestants to begin.');
     const fields = await visibleEditTexts();
@@ -32,6 +33,7 @@ describe('Feature 01 — Tournament setup screen', () => {
   });
 
   it('CT-01-002 — Add contestants and start a league tournament', async () => {
+    console.log('Starting test: CT-01-002 — Add contestants and start a league tournament');
     await startTournament({ players: ['Ana', 'Bruno'], type: 'league', matches: 2 });
     await expectText('League table');
     await expectTextContains('Ana');
@@ -39,6 +41,7 @@ describe('Feature 01 — Tournament setup screen', () => {
   });
 
   it('CT-01-003 — Add contestant fields up to the supported maximum', async () => {
+    console.log('Starting test: CT-01-003 — Add contestant fields up to the supported maximum');
     for (let index = 3; index <= 8; index += 1) await tapText('＋  Add contestant');
     for (let index = 1; index <= 8; index += 1) {
       const source = await driver.getPageSource();
@@ -50,6 +53,7 @@ describe('Feature 01 — Tournament setup screen', () => {
   });
 
   it('CT-01-004 — Assign an optional football team', async () => {
+    console.log('Starting test: CT-01-004 — Assign an optional football team');
     await fillPlayers(['Ana', 'Bruno']);
     const assignButtons = await $$(uiText('＋ Assign team'));
     assert.ok(assignButtons.length >= 2);
@@ -66,6 +70,7 @@ describe('Feature 01 — Tournament setup screen', () => {
   });
 
   it('CT-01-005 — Prevent starting without mandatory tournament settings', async () => {
+    console.log('Starting test: CT-01-005 — Prevent starting without mandatory tournament settings');
     await fillPlayers(['Ana', 'Bruno']);
     await tapText('CONFIRM CONTESTANTS');
     await toastText('Select the required tournament format and number of matches');
@@ -81,6 +86,7 @@ describe('Feature 01 — Tournament setup screen', () => {
   });
 
   it('CT-01-006 — Configure a league and knockout tournament', async () => {
+    console.log('Starting test: CT-01-006 — Configure a league and knockout tournament');
     await fillPlayers(['Ana', 'Bruno', 'Carla', 'David', 'Eva', 'Filip']);
     await configureTournament({ type: 'knockout', matches: 2, qualifiers: 4 });
     await expectTextContains('Tournament: League + knockout');
@@ -92,6 +98,7 @@ describe('Feature 01 — Tournament setup screen', () => {
   });
 
   it('CT-01-007 — Display application information', async () => {
+    console.log('Starting test: CT-01-007 — Display application information');
     const info = await $('~Information');
     await info.waitForDisplayed();
     await tapElement(info);

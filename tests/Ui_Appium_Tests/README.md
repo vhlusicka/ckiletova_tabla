@@ -4,10 +4,10 @@ This directory contains the Android regression suite derived from [`../CT Test S
 
 ## Suite structure
 
-- `specs/setup.spec.js` — Feature 01, CT-01-001 through CT-01-007
-- `specs/league.spec.js` — Feature 02, CT-02-001 through CT-02-009
-- `specs/knockout.spec.js` — Feature 03, CT-03-001 through CT-03-008
-- `specs/export.spec.js` — Feature 04, CT-04-001 through CT-04-002
+- `specs/CT-01_setup.spec.js` — Feature 01, CT-01-001 through CT-01-007
+- `specs/CT-02_league.spec.js` — Feature 02, CT-02-001 through CT-02-009
+- `specs/CT-03_knockout.spec.js` — Feature 03, CT-03-001 through CT-03-008
+- `specs/CT-04_export.spec.js` — Feature 04, CT-04-001 through CT-04-002
 - `helpers/app.js` — reusable Android interactions and tournament setup flows
 - `wdio.conf.js` — physical-device capabilities and automatic Appium server configuration
 
@@ -75,9 +75,28 @@ Use another APK when required:
 APP_PATH=/absolute/path/to/application.apk npm test
 ```
 
-The WebdriverIO Appium service starts and stops the local Appium server automatically. Tests run serially because they share one physical device. Each scenario clears the app's data in place to create clean state unless the scenario explicitly tests persistence. The run stops after its first failure.
+The WebdriverIO Appium service starts and stops the local Appium server automatically. Tests run serially because they share one physical device. A full run executes CT-01, CT-02, CT-03, and CT-04 in that order, with test cases running from top to bottom within each spec file. Each scenario clears the app's data in place to create clean state unless the scenario explicitly tests persistence. A full run continues after failures so its report includes all test cases.
 
-After the WebdriverIO output, the terminal prints one final table of the test cases that executed and their pass/fail results, including when the run fails. Failed cases capture a screenshot of the connected device under `screenshots/<run>/`. Each PNG filename includes the test case ID and title, and the terminal prints its path before the table. The `screenshots/` directory is ignored by Git.
+## Test results and failure screenshots
+
+After WebdriverIO finishes, the terminal prints one final table containing every test case that executed. The table includes the test case ID, title, pass/fail result, and a compact error message for failed cases. A full `npm test` run continues after failures so all 26 test cases can be included. A feature command such as `npm run test:knockout` includes only the cases from that feature.
+
+The same results are written to [`test-results.md`](test-results.md). This report contains:
+
+- the run identifier, start time, end time, total running time, and executed, passed, and failed totals;
+- one row for every executed test case;
+- the full error message for every failed case;
+- a link to the failure screenshot when one was captured.
+
+`test-results.md` is replaced by each test run and ignored by Git.
+
+When a test fails, the runner captures the current Android screen under:
+
+```text
+screenshots/<run-id>/<test-case-id>-<test-case-title>-<timestamp>.png
+```
+
+The screenshot path is printed in the terminal and linked from the Markdown report. The `screenshots/` directory is also ignored by Git.
 
 Verify that every documented CT ID has exactly one `it()` block:
 
