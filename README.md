@@ -12,6 +12,14 @@
 - Export final standings and all results to an Excel workbook through Android's share chooser.
 - Keep tournament data offline between launches and reset it after a protected five-second countdown.
 
+## Tech stack
+
+- **Java and Android SDK** – native application and user interface.
+- **SharedPreferences and JSON** – offline tournament storage.
+- **ZIP/XML** – Excel workbook generation without external libraries.
+- **Gradle** – application builds and APK packaging.
+- **Appium, WebdriverIO and Mocha** – Android UI regression testing.
+
 ## League rules
 
 A win is worth 3 points, a draw 1 point and a loss 0 points. Standings are ordered by points, then goal difference, then goals scored. The first contestant displayed in a fixture or result is the home contestant; the second is away.
