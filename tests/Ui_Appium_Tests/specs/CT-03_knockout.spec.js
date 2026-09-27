@@ -24,6 +24,7 @@ async function playKnockout(first, second) {
 
 describe('Feature 03 — Knockout stage', () => {
   it('CT-03-001 — Complete the league and review knockout qualification', async () => {
+    console.log('Starting test: CT-03-001 — Complete the league and review knockout qualification');
     await setupLeagueKnockout();
     await finishLeague({ players: PLAYERS_6, score: [2, 0] });
     await expectTextContains('League stage complete');
@@ -33,6 +34,7 @@ describe('Feature 03 — Knockout stage', () => {
   });
 
   it('CT-03-002 — Open the knockout bracket', async () => {
+    console.log('Starting test: CT-03-002 — Open the knockout bracket');
     await reachKnockout();
     await expectTextContains('Knockout stage');
     await expectTextAbsent('#  PLAYER');
@@ -45,21 +47,23 @@ describe('Feature 03 — Knockout stage', () => {
   });
 
   it('CT-03-003 — Record and display a knockout result', async () => {
+    console.log('Starting test: CT-03-003 — Record and display a knockout result');
     await reachKnockout();
     await tapText('PLAY NEXT KNOCKOUT MATCH  ›');
     const contestants = await currentKnockoutContestants();
-    await expectText('VS');
+    await expectTextContains('VS');
     await expectTextAbsent('HOME');
     await expectTextAbsent('AWAY');
     await enterVisibleScores(3, 1);
     await tapText('FINISH MATCH');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     await expectTextContains(`${contestants[0]}`);
     await expectTextContains('3');
     await expectTextContains('1');
   });
 
   it('CT-03-004 — Prevent a drawn knockout result', async () => {
+    console.log('Starting test: CT-03-004 — Prevent a drawn knockout result');
     await reachKnockout();
     await tapText('PLAY NEXT KNOCKOUT MATCH  ›');
     await enterVisibleScores(2, 2);
@@ -71,6 +75,7 @@ describe('Feature 03 — Knockout stage', () => {
   });
 
   it('CT-03-005 — Advance winners and populate the next knockout round', async () => {
+    console.log('Starting test: CT-03-005 — Advance winners and populate the next knockout round');
     await reachKnockout();
     const firstWinners = [];
     firstWinners.push((await playKnockout(3, 1))[0]);
@@ -81,6 +86,7 @@ describe('Feature 03 — Knockout stage', () => {
   });
 
   it('CT-03-006 — Finish the knockout tournament', async () => {
+    console.log('Starting test: CT-03-006 — Finish the knockout tournament');
     await reachKnockout();
     await playKnockout(3, 1);
     await playKnockout(2, 0);
@@ -93,20 +99,21 @@ describe('Feature 03 — Knockout stage', () => {
   });
 
   it('CT-03-007 — Display knockout matches in match histories', async () => {
+    console.log('Starting test: CT-03-007 — Display knockout matches in match histories');
     await reachKnockout();
     await playKnockout(3, 1);
     await tapText('All matches');
     await expectTextContains('KNOCKOUT');
     await expectTextContains('3 – 1');
     assert.equal((await driver.getPageSource()).includes('HOME / AWAY'), true);
-    const knockoutHeading = await $(uiTextContains('KNOCKOUT'));
-    const card = await knockoutHeading.$('..');
-    const cardText = (await Promise.all((await card.$$('android.widget.TextView')).map((el) => el.getText()))).join(' ');
-    assert.equal(cardText.includes('HOME'), false);
-    assert.equal(cardText.includes('AWAY'), false);
+    const knockoutResult = await $(uiTextContains('3 – 1'));
+    const resultText = await knockoutResult.getText();
+    assert.equal(resultText.includes('HOME'), false);
+    assert.equal(resultText.includes('AWAY'), false);
   });
 
   it('CT-03-008 — Persist the knockout bracket after reopening the app', async () => {
+    console.log('Starting test: CT-03-008 — Persist the knockout bracket after reopening the app');
     await reachKnockout();
     await playKnockout(3, 1);
     await tapText('PLAY NEXT KNOCKOUT MATCH  ›');

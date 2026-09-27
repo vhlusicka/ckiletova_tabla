@@ -1,5 +1,6 @@
 const path = require('node:path');
 const fs = require('node:fs');
+const { startRun, recordTest, printSummary } = require('./helpers/test-report');
 
 const projectRoot = path.resolve(__dirname, '../..');
 const localPropertiesPath = path.join(projectRoot, 'local.properties');
@@ -29,15 +30,19 @@ const defaultApk = path.join(
 
 exports.config = {
   runner: 'local',
-  specs: [path.join(__dirname, 'specs/**/*.spec.js')],
+  specs: [
+    path.join(__dirname, 'specs/CT-01_setup.spec.js'),
+    path.join(__dirname, 'specs/CT-02_league.spec.js'),
+    path.join(__dirname, 'specs/CT-03_knockout.spec.js'),
+    path.join(__dirname, 'specs/CT-04_export.spec.js')
+  ],
   maxInstances: 1,
   hostname: '127.0.0.1',
   port: 4723,
   path: '/',
   logLevel: process.env.WDIO_LOG_LEVEL || 'info',
-  // Stop after the first failure so a device-level restriction cannot trigger
-  // a clean reinstall for every remaining regression test.
-  bail: 1,
+  // Run the complete suite so the final report contains every test result.
+  bail: 0,
   waitforTimeout: 10000,
   connectionRetryTimeout: 120000,
   connectionRetryCount: 2,
@@ -46,6 +51,20 @@ exports.config = {
     autoCompile: false
   },
   reporters: ['spec'],
+  onPrepare: () => {
+    if (!process.env.DEBELA_TEST_REPORT_FILE) startRun();
+  },
+  afterTest: async (test, context, { passed, error }) => {
+    await recordTest(test.title, passed, browser, error);
+  },
+  afterHook: async (hook, context, { passed, error }) => {
+    if (!passed && context?.currentTest?.title) {
+      await recordTest(context.currentTest.title, false, browser, error);
+    }
+  },
+  onComplete: () => {
+    if (!process.env.DEBELA_TEST_WRAPPED) process.once('exit', printSummary);
+  },
   mochaOpts: {
     ui: 'bdd',
     timeout: 180000

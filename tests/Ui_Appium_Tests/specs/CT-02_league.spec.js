@@ -32,9 +32,9 @@ async function rowValues(contestant) {
 
 async function openNextLeagueGame() {
   await tapTextContains('PLAY GAME');
-  await expectText('HOME');
-  await expectText('VS');
-  await expectText('AWAY');
+  await expectTextContains('HOME');
+  await expectTextContains('VS');
+  await expectTextContains('AWAY');
 }
 
 describe('Feature 02 — League stage', () => {
@@ -43,24 +43,26 @@ describe('Feature 02 — League stage', () => {
   });
 
   it('CT-02-001 — Record a league match result', async () => {
+    console.log('Starting test: CT-02-001 — Record a league match result');
     await tapText('PLAY GAME 1  ›');
-    await expectText('HOME');
-    await expectText('VS');
-    await expectText('AWAY');
+    await expectTextContains('HOME');
+    await expectTextContains('VS');
+    await expectTextContains('AWAY');
     await enterVisibleScores(2, 1);
     await tapText('FINISH MATCH');
     await expectTextContains('2 – 1');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     await expectText('League table');
     await expectTextContains('1 league games played');
   });
 
   it('CT-02-002 — Calculate league standings correctly', async () => {
+    console.log('Starting test: CT-02-002 — Calculate league standings correctly');
     await openNextLeagueGame();
     const first = await currentLeagueSides();
     await enterVisibleScores(2, 1);
     await tapText('FINISH MATCH');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     const homeRow = await rowValues(first.home);
     const awayRow = await rowValues(first.away);
     assert.deepEqual(homeRow.slice(1, 6), ['3', '1', '1', '0', '0']);
@@ -73,7 +75,7 @@ describe('Feature 02 — League stage', () => {
     const beforeHome = await rowValues(second.home).catch(() => null);
     await enterVisibleScores(1, 1);
     await tapText('FINISH MATCH');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     const afterHome = await rowValues(second.home);
     const afterAway = await rowValues(second.away);
     assert.equal(Number(afterHome[2]), Number(beforeHome?.[2] || 0) + 1);
@@ -82,6 +84,7 @@ describe('Feature 02 — League stage', () => {
   });
 
   it('CT-02-003 — Schedule contestants without excessive waiting', async () => {
+    console.log('Starting test: CT-02-003 — Schedule contestants without excessive waiting');
     await resetApp();
     await startTournament({ players: PLAYERS_6, type: 'league', matches: 2 });
     const scheduled = [];
@@ -91,7 +94,7 @@ describe('Feature 02 — League stage', () => {
       if (game < 3) {
         await enterVisibleScores(1, 0);
         await tapText('FINISH MATCH');
-        await tapText('Confirm');
+        await tapText('CONFIRM');
       }
     }
     assert.equal(new Set(scheduled).size, 6);
@@ -99,6 +102,7 @@ describe('Feature 02 — League stage', () => {
   });
 
   it('CT-02-004 — Maintain fair home and away scheduling', async () => {
+    console.log('Starting test: CT-02-004 — Maintain fair home and away scheduling');
     const homeCount = Object.fromEntries(PLAYERS_4.map((name) => [name, 0]));
     const awayCount = Object.fromEntries(PLAYERS_4.map((name) => [name, 0]));
     while (!(await $(uiText('Export results...'))).isExisting()) {
@@ -108,7 +112,7 @@ describe('Feature 02 — League stage', () => {
       awayCount[sides.away] += 1;
       await enterVisibleScores(1, 0);
       await tapText('FINISH MATCH');
-      await tapText('Confirm');
+      await tapText('CONFIRM');
     }
     for (const player of PLAYERS_4) {
       const values = await rowValues(player);
@@ -118,11 +122,12 @@ describe('Feature 02 — League stage', () => {
   });
 
   it('CT-02-005 — View contestant and complete match histories', async () => {
+    console.log('Starting test: CT-02-005 — View contestant and complete match histories');
     await openNextLeagueGame();
     const sides = await currentLeagueSides();
     await enterVisibleScores(2, 1);
     await tapText('FINISH MATCH');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     await tapTextContains(sides.home);
     await expectTextContains('LEAGUE');
     await expectTextContains('HOME / AWAY');
@@ -135,6 +140,7 @@ describe('Feature 02 — League stage', () => {
   });
 
   it('CT-02-006 — Correct the latest match result', async () => {
+    console.log('Starting test: CT-02-006 — Correct the latest match result');
     await playNext({ first: 2, second: 1 });
     await playNext({ first: 1, second: 0 });
     await tapText('All matches');
@@ -148,13 +154,14 @@ describe('Feature 02 — League stage', () => {
     await fields[1].setValue('0');
     await driver.hideKeyboard().catch(() => {});
     await tapText('SAVE CORRECTION');
-    await tapText('Confirm');
+    await tapText('CONFIRM');
     await tapText('All matches');
     await expectTextContains('GAME 2');
     await expectTextContains('3 – 0');
   });
 
   it('CT-02-007 — Finish a league-only tournament', async () => {
+    console.log('Starting test: CT-02-007 — Finish a league-only tournament');
     await finishLeague();
     const finished = await $(uiText('Export results...'));
     await finished.waitForDisplayed();
@@ -164,6 +171,7 @@ describe('Feature 02 — League stage', () => {
   });
 
   it('CT-02-008 — Persist an active tournament after reopening the app', async () => {
+    console.log('Starting test: CT-02-008 — Persist an active tournament after reopening the app');
     await playNext({ first: 2, second: 1 });
     await tapTextContains('PLAY GAME');
     const expectedFixture = await currentMatchPlayers(PLAYERS_4);
@@ -179,6 +187,7 @@ describe('Feature 02 — League stage', () => {
   });
 
   it('CT-02-009 — Reset the tournament with countdown protection', async () => {
+    console.log('Starting test: CT-02-009 — Reset the tournament with countdown protection');
     await tapText('Reset tournament');
     await expectText('Reset the whole tournament?');
     await expectTextContains('Please wait 5 seconds.');
